@@ -10,13 +10,15 @@ license: mit
 
 # MosAIc
 
-A **reconfigurable HTML surface for directing an LLM** — an alternative to the linear chat transcript.
+**A reconfigurable surface for directing an LLM — the panels reshape per task, instead of a linear chat transcript.**
 
-Instead of scrolling a conversation, you work in a structured, persistent surface: a sidebar of views and a main panel area that **reshapes to fit the task**. The model emits a structure; the surface renders it. Bring your own LLM — MosAIc is the surface, not the model.
+Most LLM interfaces are a scroll: one conversation, no matter the work. MosAIc is a *surface* instead — a sidebar of views and a field of typed tiles. The model emits a small JSON **overlay** describing the shape it wants; MosAIc lays it out. Same mechanism, any task. Bring your own LLM — MosAIc is the surface, not the model.
 
-## Run it
+![MosAIc reshaping into a codebase-overview surface](screenshot.png)
 
-It's a static site — no backend.
+## Try it
+
+It's a static site — no backend, no build step.
 
 ```bash
 python3 -m http.server 8000   # then open http://localhost:8000
@@ -24,13 +26,24 @@ python3 -m http.server 8000   # then open http://localhost:8000
 
 or just open `index.html`.
 
+Pick a task in the command bar (**Explain a codebase**, **Debug an error**, **Plan a feature**) and watch the whole shell — sidebar *and* tiles — reconfigure. Then edit the JSON in the **Composer** tile and **Apply** to drive it yourself.
+
+## How it reshapes
+
+The mechanism is **base + overlay**. A base surface plus an overlay an LLM emits, merged by view id: `effective(base) = base ⊕ overlay`. The render path reads only from `effective()`, so one overlay reshapes everything.
+
+A **surface** holds **views**; a view lays out **tesserae** — the typed tiles a mosaic is made of (markdown, code, table, diagram, note, tasks, composer). The overlay contract is small and documented in **[SCHEMA.md](SCHEMA.md)** — that's the core IP, the target an LLM writes to.
+
 ## Shape
 
-- `index.html` + `style.css` — the shell and aesthetic
-- `js/` — a tiny hash router, a `STATE` store with a base + overlay merge (the reconfiguration mechanism), a sidebar rendered from a view registry, and a markdown↔HTML renderer
-- `js/views/` — swappable view modules; add your own
+- `index.html` + `style.css` — the shell, command bar, and aesthetic (Syne + IBM Plex)
+- `js/state.js` — `STATE` + `effective(base)`, the base ⊕ overlay merge
+- `js/surface.js` — the base surface; `js/demo.js` — the task overlays
+- `js/tesserae.js` — one renderer per tile type (adding a type is one function)
+- `js/view.js`, `js/router.js`, `js/sidebar.js` — the render path
+- `js/diagram.js` — diagram tiles via Mermaid (loaded lazily, degrades to source text offline)
 
-See `BRIEF.md` for the design and the build plan.
+See **[CODEMAP.md](CODEMAP.md)** for the file-by-file orientation and **[SCHEMA.md](SCHEMA.md)** for the overlay contract.
 
 ## License
 

@@ -3,7 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MosAIc — a reconfigurable surface for directing an LLM. An LLM emits a JSON overlay; the surface reshapes to fit the task.">
   <title>MosAIc</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <meta property="og:title" content="MosAIc">
+  <meta property="og:description" content="A reconfigurable surface for directing an LLM — the panels reshape per task.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="screenshot.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
@@ -20,6 +26,7 @@
       <nav id="nav"></nav>
     </aside>
     <main id="main">
+      <div id="cmdbar" class="cmdbar"></div>
       <div id="view"></div>
     </main>
   </div>

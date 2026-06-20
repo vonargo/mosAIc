@@ -7,10 +7,21 @@ export function slugify(s) {
   return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
+/* Inline markdown — code, bold, italic, strike, links. Operates on text that
+   is *already* HTML-escaped. Exported so tesserae (e.g. table cells) reuse it. */
+export function mdInline(t) {
+  return t
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[\s(])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')
+    .replace(/~~([^~]+)~~/g, '<s>$1</s>')
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+
 /* Markdown → HTML. Small, dependency-free. Covers headings, lists, tables,
    fenced code, blockquotes, rules, and inline emphasis/code/links.
-   A ```mermaid fence emits <div class="mermaid"> so an optional diagram lib
-   can render it. This is the reusable core of the doc surface. */
+   A ```mermaid fence emits <div class="mermaid"> so the diagram lib can
+   render it. This is the reusable core of the markdown tessera. */
 export function mdToHtml(md) {
   if (!md) return '';
   const fences = [];
@@ -25,12 +36,7 @@ export function mdToHtml(md) {
   });
   src = escapeHtml(src);
 
-  const inline = t => t
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/(^|[\s(])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')
-    .replace(/~~([^~]+)~~/g, '<s>$1</s>')
-    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  const inline = mdInline;
 
   const lines = src.split('\n');
   const out = [];

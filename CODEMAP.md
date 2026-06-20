@@ -1,37 +1,41 @@
 # MosAIc — code map
 
-*Orientation for building on the staged skeleton. Pairs with `BRIEF.md` (vision + scope).*
+*File-by-file orientation. Pairs with `BRIEF.md` (vision) and `SCHEMA.md` (the overlay contract).*
 
 ## What's here
 
-A zero-backend static SPA: a fixed shell (`index.html`) with a left sidebar of views and a main panel, driven by ES modules in `js/`. A hash router maps `#id` → a view from a data-driven registry; each view is `{ id, title, render(mount) }` and paints HTML into `#view`. `js/utils.js` has a dependency-free markdown→HTML renderer the views use. `js/state.js` holds `STATE` plus the `base + overlay` merge (`effective()`) — the reconfiguration hook (see BRIEF, "the reconfigurable idea").
+A zero-backend static SPA. A fixed shell (`index.html`) — left **sidebar** of views, a sticky **command bar**, a **main** panel — driven by ES modules in `js/`. The surface is **data**: a *surface* holds *views*, each a layout of *tesserae* (the typed tiles a mosaic is made of). An LLM (or the in-app Composer) emits an **overlay**; `effective(base ⊕ overlay)` is the surface that actually renders. A hash router maps `#id` → a view in the *effective* surface and paints its tesserae into `#view`.
 
 ## Files
 
-- `index.html` — shell DOM (`#sidebar` with `#nav`, `#main` with `#view`); loads fonts + `style.css`; bootstraps via `js/main.js`.
-- `style.css` — theme vars in `:root`; flex layout; sidebar collapse via `#app.sb-collapsed`; markdown styles (`.md-h*`, `.md-table`, `.md-quote`, `.code-block pre`).
-- `js/main.js` — `boot()`: render sidebar, route, wire `hashchange` + the sidebar toggle (persisted in `localStorage['mosaic-sb-collapsed']`).
-- `js/router.js` — `navigate(id)` (sets the hash) + `handleHash()` (resolve id→view, render into `#view`, repaint nav, reset scroll).
-- `js/state.js` — `STATE { route, overlay }` + `effective(base)` = `{...base, ...overlay[base.id]}`. Leaf module.
-- `js/sidebar.js` — `renderNav()` rebuilds `#nav` from `VIEWS`, marks the active item, wires click → `navigate`.
-- `js/utils.js` — `escapeHtml`, `slugify`, `mdToHtml` (fenced code incl. a `mermaid` case, tables, h2–h6, rules, blockquotes, nested lists, inline emphasis/code/links). Leaf module.
-- `js/views/index.js` — `VIEWS` registry + `getView(id)`. **Register new views here.**
-- `js/views/{welcome,doc}.js` — the two example views.
+- `index.html` — shell DOM (`#sidebar`/`#nav`, `#cmdbar`, `#main`/`#view`); SVG favicon; loads fonts + `style.css`; boots `js/main.js`.
+- `style.css` — theme vars in `:root`; flex layout; command bar; tessera grid + the three layouts (`stack`/`grid`/`split`); per-tile styles; reshape transitions (tile stagger, mark spin, toast); markdown styles.
+- `js/state.js` — `STATE { route, overlay, task }` + `effective(base)`, the **base ⊕ overlay** merge (overlay views assigned over base by id, or appended; `remove` drops). Pure leaf, no imports. **The core mechanism.**
+- `js/surface.js` — `BASE` (the default surface — the Start view: pitch + a live Composer) and `surface()` / `viewById(id)`, which read everything *post-merge* through `effective(BASE)`.
+- `js/tesserae.js` — `renderTessera(t, i)` + the `RENDERERS` map (markdown, code, table, diagram, note, tasks, composer) + `hydrate()` for interactive tiles. **Add a tile type here: one function + one map entry.**
+- `js/diagram.js` — `renderMermaid(root)`; lazily/​defensively imports Mermaid from a CDN, degrades to readable source text if it can't load (keeps an offline `index.html` open working).
+- `js/view.js` — `renderView(view, mount)`: heading + a `.tessera-grid` laid out by `view.layout`, then `hydrate` + `renderMermaid`.
+- `js/router.js` — `navigate(id)` (sets the hash) + `handleHash()` (resolve id → effective view via `viewById`, render, repaint nav, reset scroll).
+- `js/sidebar.js` — `renderNav()` rebuilds `#nav` from `surface().views` (so it reshapes when an overlay adds/drops views).
+- `js/demo.js` — `TASKS`: the three canned task overlays (Explain / Debug / Plan) that drive the command bar.
+- `js/main.js` — `boot()`; renders the command bar; `applyOverlay()` / `resetOverlay()` set `STATE.overlay` and re-route (sidebar + tiles reshape together); a one-time auto-demo; `mosaic:apply` / `mosaic:reset` events from the Composer; toast + reshape flash; sidebar collapse (persisted).
+- `js/utils.js` — `escapeHtml`, `slugify`, `mdInline`, `mdToHtml`. Pure leaf.
 
-**Flow:** load → `boot()` → `renderNav()` fills the sidebar → `handleHash()` resolves the hash (default = first view) → `view.render(#view)` → nav clicks set the hash → `hashchange` re-renders.
+**Flow:** load → `boot()` → command bar + `renderNav()` → `handleHash()` resolves the hash against `effective(BASE)` → `renderView()` tiles the tesserae → a chip/Composer calls `applyOverlay()` → sets `STATE.overlay`, re-routes → sidebar + tiles reshape.
 
 ## Extension points
 
-- **Add a view:** create `js/views/foo.js` exporting `{ id, title, render(mount) }`, then add it to `VIEWS` in `js/views/index.js`. It auto-appears in the sidebar and routes at `#foo`. Use `mdToHtml` for content.
-- **The reconfiguration hook:** `STATE.overlay` + `effective(base)` in `js/state.js`. Today it is **inert** — defined but not yet on the render path. The build (BRIEF tasks 1–2) defines the overlay schema and routes view resolution through `effective()` so an overlay merges over a base before render. Generalize the shallow `{...base, ...ov}` into a multi-panel layout.
+- **Add a tile type:** write `RENDERERS.foo(t)` in `js/tesserae.js` (return an HTML string), add `foo` to the map. Wire any interactivity in `hydrate()`. Reference it as `{ "type": "foo", … }` in an overlay.
+- **Add a task:** push `{ id, label, overlay }` to `TASKS` in `js/demo.js`; it appears in the command bar.
+- **The contract:** `SCHEMA.md`. The whole render path reads `effective()`, so the schema *is* the surface.
 
-## Known rough edges (fine for a skeleton — know them before building)
+## Known rough edges
 
-- `effective()` / `STATE.overlay` have no call sites yet — a staged hook, not live.
-- `mdToHtml` list depth assumes 2-space indent; 4-space/tabs misbehave. The fenced-code placeholder is whitespace-sensitive. Headings are h2–h6 (views render their own `<h1 class="doc-title">`).
-- `renderSidebar()` is a thin wrapper that just calls `renderNav()` — one job, two names.
-- Only external dependency is Google Fonts (graceful fallback offline).
+- `mdToHtml` list depth assumes 2-space indent; 4-space/tabs misbehave. Headings render as `.md-h` divs (h2–h6), not real heading tags.
+- Diagram tiles need the Mermaid CDN to draw; offline they show their source text (by design — the app still runs).
+- The `router` ↔ `sidebar` import cycle is safe (both imported symbols are functions called only at runtime).
+- Only external dependencies are Google Fonts and the Mermaid CDN, both with graceful fallback.
 
 ## Runs?
 
-Yes. Valid ES-module import graph; the `router`↔`sidebar` circular import is safe (both imported symbols are functions called only at runtime, after both modules finish evaluating). Opening `index.html` (or `python3 -m http.server`) shows the sidebar + two views, renders Welcome by default, routes on click, and persists the sidebar-collapse — no console errors.
+Yes — valid ES-module graph, no console errors. Opening `index.html` (or `python3 -m http.server`) shows the shell, renders Start, auto-reshapes once to demonstrate, and reconfigures sidebar + tiles on every task/overlay. Verified end-to-end in a browser: all tile types, all three layouts, the command bar, the auto-demo, and the live Composer.
