@@ -40,11 +40,13 @@
   :root[data-theme="dark"] .cmdbar { background: rgba(21, 22, 26, .82); }
   html { transition: background-color .2s ease, color .2s ease; } 
 
+  /* far right of the command bar — margin auto pushes it past Reset */
   .theme-toggle {
-    margin-top: 12px; font: inherit; font-size: 12.5px; color: var(--ink-faint);
+    margin-left: auto; flex: 0 0 auto;
+    font: inherit; font-size: 12.5px; color: var(--ink-faint);
     background: none; border: 1px solid var(--line); border-radius: 999px;
-    padding: 4px 11px; cursor: pointer;
-  } 
+    padding: 5px 12px; cursor: pointer;
+  }
   .theme-toggle:hover { color: var(--ink); border-color: var(--ink-faint); }
 
 * { box-sizing: border-box; }
@@ -66,15 +68,7 @@ html, body {
   padding: 22px 18px; overflow-y: auto;
   position: relative; transition: margin-left .18s ease;
 }
-.sb-toggle {
-  position: absolute; top: 16px; right: 12px;
-  width: 24px; height: 24px; border: 1px solid var(--line);
-  background: var(--panel); color: var(--ink-faint);
-  border-radius: 6px; cursor: pointer; line-height: 1;
-}
-.sb-toggle:hover { color: var(--ink); border-color: var(--ink-faint); }
-
-.brand { margin-bottom: 26px; padding-right: 28px; }
+.brand { margin-bottom: 26px; }
 .brand-title { font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; }
 .brand-sub  { color: var(--ink-faint); font-size: 12.5px; margin-top: 3px; }
 
@@ -98,12 +92,22 @@ html, body {
 
 .cmdbar {
   position: sticky; top: 0; z-index: 20;
-  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
-  padding: 12px 28px;
+  display: flex; align-items: center; gap: 10px 12px; flex-wrap: wrap;
+  padding: 11px 24px;
   background: rgba(251, 251, 250, .82);
   backdrop-filter: saturate(1.4) blur(8px);
   border-bottom: 1px solid var(--line);
 }
+/* sidebar-collapse toggle — lives here so it's reachable when the sidebar is hidden */
+.cmd-icon {
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  width: 30px; height: 30px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--panel); color: var(--ink-soft); cursor: pointer;
+}
+.cmd-icon:hover { color: var(--ink); border-color: var(--ink-faint); }
+/* the chevron rolls 180° in sync with the sidebar slide (same .18s) */
+.sb-chev { display: inline-block; font-size: 19px; line-height: 1; transition: transform .18s ease; }
+#app.sb-collapsed .sb-chev { transform: rotate(180deg); }
 .cmd-lead { display: flex; align-items: center; gap: 9px; }
 .cmd-mark { display: block; transform-origin: 50% 50%; }
 .cmd-mark rect { fill: var(--accent); }
@@ -124,6 +128,13 @@ html, body {
   border-radius: 999px; cursor: pointer;
 }
 .cmd-reset:hover { color: var(--ink-soft); border-color: var(--ink-faint); }
+.cmd-btn {
+  font-family: inherit; font-size: 13px; padding: 6px 13px; flex: 0 0 auto;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink-soft);
+  border-radius: 999px; cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.cmd-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 #view { width: 100%; max-width: var(--max-wide); margin: 0 auto; padding: 36px 48px 96px; }
 .view-inner.layout-stack { max-width: var(--max-read); margin: 0 auto; }
@@ -251,7 +262,32 @@ pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
 .task-text { font-size: 14px; }
 .task-item.done .task-text { color: var(--ink-faint); text-decoration: line-through; }
 
-/* ── Tile: composer (live overlay editor) ────────────────── */
+/* ── Composer drawer (a command-bar driver, not a tessera) ─── */
+.composer-drawer { position: fixed; inset: 0; z-index: 50; visibility: hidden; }
+.composer-drawer.open { visibility: visible; }
+.composer-scrim {
+  position: absolute; inset: 0; background: rgba(0, 0, 0, .34);
+  opacity: 0; transition: opacity .2s ease;
+}
+.composer-drawer.open .composer-scrim { opacity: 1; }
+.composer-panel {
+  position: absolute; top: 0; right: 0; height: 100%; width: min(540px, 94vw);
+  display: flex; flex-direction: column; gap: 12px; padding: 20px 22px 22px;
+  background: var(--panel); border-left: 1px solid var(--line);
+  box-shadow: -18px 0 50px rgba(0, 0, 0, .16);
+  transform: translateX(100%); transition: transform .24s cubic-bezier(.2, .7, .3, 1);
+}
+.composer-drawer.open .composer-panel { transform: none; }
+.composer-panel-head { display: flex; align-items: center; justify-content: space-between; }
+.composer-panel-title { font-family: var(--display); font-weight: 600; font-size: 15px; }
+.composer-panel-hint { color: var(--ink-faint); font-size: 12.5px; margin: 0; }
+.composer-close {
+  width: 28px; height: 28px; flex: 0 0 auto; line-height: 1; font-size: 14px;
+  border: 1px solid var(--line); border-radius: 7px; background: none; color: var(--ink-faint); cursor: pointer;
+}
+.composer-close:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+/* the editor itself — shared styling, used inside the drawer */
 .composer-input {
   width: 100%; min-height: 210px; resize: vertical;
   font-family: var(--mono); font-size: 12.5px; line-height: 1.55;
@@ -273,6 +309,7 @@ pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
 .composer-msg { font-size: 12.5px; }
 .composer-msg.ok  { color: var(--ok); }
 .composer-msg.err { color: #c0392b; font-family: var(--mono); font-size: 12px; }
+.composer-panel .composer-input { flex: 1; min-height: 0; }   /* fill the drawer height */
 
 /* ── Reshape signals ─────────────────────────────────────── */
 #app.reshaping .cmd-mark { animation: markSpin .6s cubic-bezier(.3, .8, .3, 1); }
@@ -293,11 +330,13 @@ pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
 }
 @media (max-width: 720px) {
   #view { padding: 26px 20px 80px; }
-  .cmdbar { padding: 10px 18px; }
+  .cmdbar { padding: 10px 16px; }
+  .cmd-label { display: none; }   /* keep the mark + chips; drop the label */
   :root { --sidebar-w: 230px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .tessera, .nav-item, .cmd-mark, #app.reshaping .cmd-mark { animation: none !important; }
+  .composer-scrim, .composer-panel { transition: none !important; }
   .toast { transition: opacity .2s ease; }
 }

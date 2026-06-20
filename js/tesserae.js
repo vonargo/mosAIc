@@ -3,8 +3,8 @@
 // One renderer per `type`, registered in RENDERERS. Each takes a tessera spec
 // and returns an HTML string for the tile body; `renderTessera` wraps it in the
 // shared chrome. Adding a tile type = write a function, add one line to the map.
-// Interactive tiles (code-copy, tasks, composer) wire up in `hydrate()`, run
-// once after the HTML lands.
+// Interactive tiles (code-copy, tasks) wire up in `hydrate()`, run once after
+// the HTML lands. Tesserae are content only — controls live in the command bar.
 
 import { escapeHtml, mdToHtml, mdInline } from './utils.js';
 
@@ -49,19 +49,6 @@ const RENDERERS = {
     }).join('');
     return `<ul class="tasks">${items}</ul>`;
   },
-
-  // The live overlay editor — paste/edit the JSON contract, Apply, watch the
-  // surface reshape. The interactive proof that the schema drives everything.
-  composer(t) {
-    return `<div class="composer">
-      <textarea class="composer-input" spellcheck="false" aria-label="Overlay JSON">${escapeHtml(t.value || '{\n  "views": []\n}')}</textarea>
-      <div class="composer-row">
-        <button class="composer-apply" type="button">Apply overlay</button>
-        <button class="composer-reset" type="button">Reset</button>
-        <span class="composer-msg" role="status"></span>
-      </div>
-    </div>`;
-  },
 };
 
 export function renderTessera(t, i = 0) {
@@ -96,22 +83,6 @@ export function hydrate(root) {
     li.addEventListener('click', toggle);
     li.addEventListener('keydown', e => {
       if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); }
-    });
-  });
-
-  root.querySelectorAll('.composer').forEach(box => {
-    const ta = box.querySelector('.composer-input');
-    const msg = box.querySelector('.composer-msg');
-    box.querySelector('.composer-apply')?.addEventListener('click', () => {
-      let parsed;
-      try { parsed = JSON.parse(ta.value); }
-      catch (e) { msg.textContent = 'Invalid JSON — ' + e.message; msg.className = 'composer-msg err'; return; }
-      msg.textContent = 'Applied ✓'; msg.className = 'composer-msg ok';
-      document.dispatchEvent(new CustomEvent('mosaic:apply', { detail: { overlay: parsed, label: 'Composer' } }));
-    });
-    box.querySelector('.composer-reset')?.addEventListener('click', () => {
-      msg.textContent = ''; msg.className = 'composer-msg';
-      document.dispatchEvent(new CustomEvent('mosaic:reset'));
     });
   });
 }

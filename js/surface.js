@@ -3,25 +3,25 @@
 // BASE is the default mosaic you land on; an overlay reshapes it. The render
 // path (router, sidebar) reads the surface only through `surface()` / `viewById()`
 // so it never sees the base directly — every read is post-merge.
+//
+// BASE's one view, "Start Here", is a pure explainer: content only, no controls.
+// The controls (Composer, task chips, …) live in the command bar — see main.js.
 
 import { STATE, effective } from './state.js';
 
-// A sample overlay the Start composer ships pre-filled with — editing it and
-// hitting Apply adds a "Notes" view to the sidebar, proving the surface is live.
-const COMPOSER_SAMPLE = `{
+// A compact example of the contract, shown as a code tessera on the landing.
+// The editable version lives in the command-bar Composer (js/composer.js).
+const OVERLAY_EXAMPLE = `{
   "views": [
     {
-      "id": "notes",
-      "title": "Notes",
-      "layout": "stack",
+      "id": "debug",
+      "title": "Debug",
+      "layout": "split",
       "tesserae": [
-        { "type": "markdown", "title": "Scratch",
-          "body": "Edit this JSON and **Apply** — MosAIc adds a *Notes* view to the sidebar and renders it. This is the exact contract an LLM emits.\\n\\n- rename the view\\n- add a tessera\\n- switch the layout" },
-        { "type": "tasks", "title": "Try", "items": [
-          { "text": "Rename this view", "done": false },
-          { "text": "Add a code tessera", "done": false },
-          { "text": "Switch layout to grid", "done": false }
-        ] }
+        { "type": "code",     "title": "Traceback", "body": "IndexError: ..." },
+        { "type": "tasks",    "title": "Hypotheses",
+          "items": [ { "text": "Off-by-one on the last batch" } ] },
+        { "type": "markdown", "title": "Fix", "body": "Guard the slice." }
       ]
     }
   ]
@@ -32,7 +32,7 @@ export const BASE = {
   views: [
     {
       id: 'start',
-      title: 'Start',
+      title: 'Start Here',
       heading: 'MosAIc',
       subtitle: 'a reconfigurable surface for directing an LLM',
       layout: 'split',
@@ -45,7 +45,7 @@ The model doesn't just answer — it emits a small JSON **overlay** describing t
         },
         {
           type: 'note', tone: 'accent', title: 'Try it',
-          body: `Pick a task in the command bar above — watch the **sidebar and the tiles** both reconfigure. Then edit the overlay below and **Apply** to drive it yourself.`,
+          body: `Pick a task in the command bar — watch the **sidebar and the tiles** both reconfigure. Or open the **Composer** (top bar) to emit your own overlay and drive it yourself.`,
         },
         {
           type: 'diagram', title: 'The mechanism',
@@ -56,7 +56,7 @@ The model doesn't just answer — it emits a small JSON **overlay** describing t
         },
         {
           type: 'markdown', span: 2, title: 'The pieces',
-          body: `A **surface** holds **views**; a view lays out **tesserae** — the typed tiles a mosaic is made of.
+          body: `A **surface** holds **views**; a view lays out **tesserae** — the typed tiles a mosaic is made of: \`markdown\`, \`code\`, \`table\`, \`diagram\`, \`note\`, \`tasks\`.
 
 | piece | is |
 | --- | --- |
@@ -65,9 +65,8 @@ The model doesn't just answer — it emits a small JSON **overlay** describing t
 | tessera | one typed tile |`,
         },
         {
-          type: 'composer', span: 2,
-          title: 'Composer — emit an overlay',
-          value: COMPOSER_SAMPLE,
+          type: 'code', span: 2, lang: 'json', filename: 'the JSON an LLM emits',
+          body: OVERLAY_EXAMPLE,
         },
       ],
     },

@@ -61,9 +61,9 @@ One typed tile. Common fields: `type` (required), `title` (optional header), `sp
 { "type": "note", "tone": "info|accent|warn|ok", "body": "a callout…" }
 
 { "type": "tasks", "items": [ { "text": "do a thing", "done": false } ] }
-
-{ "type": "composer", "value": "{ \"views\": [] }" }   // a live overlay editor
 ```
+
+Tesserae are **content only** — there is no control tile. The Composer (the live overlay editor) and the task chips are *chrome*: they live in the command bar so the surface can't reshape its own controls away.
 
 Markdown and note bodies accept the full markdown renderer (headings, lists, tables, fenced code, inline emphasis/code/links). Table cells accept inline markdown.
 
@@ -107,4 +107,4 @@ Applying this adds a **Debug** entry to the sidebar and renders a split layout: 
 
 ## Driving it from a model
 
-MosAIc ships no model — it's the surface you wire one into. To drive it, prompt your LLM with this schema and have it return an overlay as JSON, then apply it (the in-app **Composer** tile does exactly this with hand-edited JSON; a model integration would feed the same `mosaic:apply` path).
+MosAIc ships no model — it's the surface you wire one into. To drive it, prompt your LLM with this schema and have it return an overlay as JSON, then apply it (the command-bar **Composer** does exactly this with hand-edited JSON; a model integration would feed the same `mosaic:apply` path).
