@@ -40,9 +40,9 @@
   :root[data-theme="dark"] .cmdbar { background: rgba(21, 22, 26, .82); }
   html { transition: background-color .2s ease, color .2s ease; } 
 
-  /* far right of the command bar — margin auto pushes it past Reset */
+  /* far right of the command bar (the flex-grow prompt pushes it there) */
   .theme-toggle {
-    margin-left: auto; flex: 0 0 auto;
+    flex: 0 0 auto;
     font: inherit; font-size: 12.5px; color: var(--ink-faint);
     background: none; border: 1px solid var(--line); border-radius: 999px;
     padding: 5px 12px; cursor: pointer;
@@ -108,20 +108,54 @@ html, body {
 /* the chevron rolls 180° in sync with the sidebar slide (same .18s) */
 .sb-chev { display: inline-block; font-size: 19px; line-height: 1; transition: transform .18s ease; }
 #app.sb-collapsed .sb-chev { transform: rotate(180deg); }
-.cmd-lead { display: flex; align-items: center; gap: 9px; }
-.cmd-mark { display: block; transform-origin: 50% 50%; }
+.cmd-mark { display: block; flex: 0 0 auto; transform-origin: 50% 50%; }
 .cmd-mark rect { fill: var(--accent); }
 .cmd-mark rect:nth-child(2), .cmd-mark rect:nth-child(3) { opacity: .42; }
-.cmd-label { font-family: var(--display); font-weight: 600; font-size: 13px; color: var(--ink-soft); }
-.cmd-tasks { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.cmd-chip {
-  font-family: inherit; font-size: 13px; padding: 6px 13px;
-  border: 1px solid var(--line); background: var(--panel);
-  border-radius: 999px; cursor: pointer; color: var(--ink-soft);
-  transition: border-color .15s, color .15s, background .15s;
+
+/* the prompt — the main driver. Type a task; signed in, a model emits an overlay. */
+.cmd-prompt-wrap { position: relative; flex: 1 1 240px; min-width: 150px; display: flex; align-items: center; }
+.cmd-prompt {
+  width: 100%; font: inherit; font-size: 13.5px; color: var(--ink);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
+  padding: 7px 32px 7px 14px; outline: none; transition: border-color .15s;
 }
-.cmd-chip:hover { border-color: var(--ink-faint); color: var(--ink); }
-.cmd-chip.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+.cmd-prompt::placeholder { color: var(--ink-faint); }
+.cmd-prompt:focus { border-color: var(--accent); }
+.cmd-form.thinking .cmd-prompt { opacity: .55; }
+.cmd-spinner {
+  position: absolute; right: 12px; top: 50%; width: 14px; height: 14px; margin-top: -7px;
+  border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* example suggestions — instant, no sign-in (shown when the prompt is empty + focused) */
+.cmd-suggest {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 30; width: max(300px, 100%);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .14); padding: 6px;
+}
+.cmd-suggest[hidden] { display: none; }
+.suggest-head {
+  font-size: 11px; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--ink-faint); padding: 6px 10px 5px;
+}
+.suggest-item {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%;
+  text-align: left; padding: 7px 10px; border: 0; background: none; border-radius: 8px; cursor: pointer; font: inherit;
+}
+.suggest-item:hover { background: var(--accent-soft); }
+.suggest-label { font-size: 13.5px; font-weight: 500; color: var(--ink); }
+.suggest-hint { font-size: 12px; color: var(--ink-faint); }
+
+/* account / sign-in */
+.cmd-account {
+  font: inherit; font-size: 12.5px; padding: 6px 12px; flex: 0 0 auto; cursor: pointer;
+  max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink-soft);
+}
+.cmd-account:hover { border-color: var(--ink-faint); color: var(--ink); }
+.cmd-account.in { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
 .cmd-reset {
   font-family: inherit; font-size: 12.5px; padding: 6px 11px; margin-left: 2px;
   border: 1px dashed var(--line); background: none; color: var(--ink-faint);
@@ -226,13 +260,15 @@ pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
 .t-copy-float { position: absolute; top: 10px; right: 10px; z-index: 2; }
 
 /* ── Tile: diagram (mermaid) ─────────────────────────────── */
-.t-diagram .tessera-body { display: flex; justify-content: center; }
+.t-diagram { display: flex; flex-direction: column; }   /* let the body fill the tile height */
+.t-diagram .tessera-body { flex: 1; display: flex; align-items: center; justify-content: center; }
 .mermaid {
-  margin: 0 auto; text-align: center; max-width: 100%;
+  width: 100%; margin: 0; text-align: center;
   font-family: var(--mono); font-size: 12.5px; line-height: 1.5; color: var(--ink-soft);
   white-space: pre; overflow-x: auto;
 }
-.mermaid svg { max-width: 100%; height: auto; }
+/* fill the tile — override Mermaid's intrinsic-width cap so the diagram isn't tiny */
+.mermaid svg { width: 100% !important; max-width: 100% !important; height: auto; }
 .mermaid-fallback {
   text-align: left; background: var(--line-soft);
   padding: 12px 14px; border-radius: 8px; width: 100%;
@@ -331,7 +367,7 @@ pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
 @media (max-width: 720px) {
   #view { padding: 26px 20px 80px; }
   .cmdbar { padding: 10px 16px; }
-  .cmd-label { display: none; }   /* keep the mark + chips; drop the label */
+  .cmd-prompt-wrap { flex-basis: 100%; order: 1; }   /* prompt takes its own row */
   :root { --sidebar-w: 230px; }
 }
 

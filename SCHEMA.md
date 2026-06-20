@@ -5,7 +5,7 @@ MosAIc's core contract: the JSON an LLM emits to **reconfigure the surface**. Ke
 Three nouns: a **surface** holds **views**; a view lays out **tesserae** (the typed tiles a mosaic is made of).
 
 ```
-surface ─┬─ view ─┬─ tessera   (markdown | code | table | diagram | note | tasks | composer)
+surface ─┬─ view ─┬─ tessera   (markdown | code | table | diagram | note | tasks)
          │        ├─ tessera
          │        └─ …
          ├─ view …
@@ -63,7 +63,7 @@ One typed tile. Common fields: `type` (required), `title` (optional header), `sp
 { "type": "tasks", "items": [ { "text": "do a thing", "done": false } ] }
 ```
 
-Tesserae are **content only** — there is no control tile. The Composer (the live overlay editor) and the task chips are *chrome*: they live in the command bar so the surface can't reshape its own controls away.
+Tesserae are **content only** — there is no control tile. The prompt, the example suggestions, and the Composer (the live overlay editor) are *chrome*: they live in the command bar so the surface can't reshape its own controls away.
 
 Markdown and note bodies accept the full markdown renderer (headings, lists, tables, fenced code, inline emphasis/code/links). Table cells accept inline markdown.
 
@@ -107,4 +107,4 @@ Applying this adds a **Debug** entry to the sidebar and renders a split layout: 
 
 ## Driving it from a model
 
-MosAIc ships no model — it's the surface you wire one into. To drive it, prompt your LLM with this schema and have it return an overlay as JSON, then apply it (the command-bar **Composer** does exactly this with hand-edited JSON; a model integration would feed the same `mosaic:apply` path).
+MosAIc has a built-in **bring-your-own** model path: signed in with Hugging Face, a typed task is sent to a model on [Inference Providers](https://huggingface.co/docs/inference-providers) billed to the viewer. This schema is the system prompt, the example overlays are the few-shot, and the validated result feeds the `mosaic:apply` path (see `js/llm.js`). No model *ships* with MosAIc and there's no shared key — the Composer drives the same path with hand-edited JSON, and forks can point `js/llm.js` at any chat-completion endpoint.

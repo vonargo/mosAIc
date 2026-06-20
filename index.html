@@ -31,16 +31,19 @@
         <button id="sb-toggle" class="cmd-icon" type="button" aria-label="Hide sidebar" title="Hide sidebar">
           <span class="sb-chev" aria-hidden="true">‹</span>
         </button>
-        <div class="cmd-lead">
-          <svg class="cmd-mark" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-            <rect x="0" y="0" width="8" height="8" rx="1.5"/><rect x="10" y="0" width="8" height="8" rx="1.5"/>
-            <rect x="0" y="10" width="8" height="8" rx="1.5"/><rect x="10" y="10" width="8" height="8" rx="1.5"/>
-          </svg>
-          <span class="cmd-label">Direct the surface</span>
-        </div>
-        <div id="cmd-tasks" class="cmd-tasks"></div>
+        <svg class="cmd-mark" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+          <rect x="0" y="0" width="8" height="8" rx="1.5"/><rect x="10" y="0" width="8" height="8" rx="1.5"/>
+          <rect x="0" y="10" width="8" height="8" rx="1.5"/><rect x="10" y="10" width="8" height="8" rx="1.5"/>
+        </svg>
+        <form id="cmd-form" class="cmd-prompt-wrap" autocomplete="off">
+          <input id="cmd-prompt" class="cmd-prompt" type="text" autocomplete="off"
+                 placeholder="Direct the surface — type a task…" aria-label="Direct the surface — type a task">
+          <span class="cmd-spinner" hidden aria-hidden="true"></span>
+          <div id="cmd-suggest" class="cmd-suggest" role="listbox" hidden></div>
+        </form>
         <button id="composer-open" class="cmd-btn" type="button">✎ Composer</button>
         <button id="cmd-reset" class="cmd-reset" type="button">Reset</button>
+        <button id="cmd-account" class="cmd-account" type="button">Sign in</button>
         <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">◐ Theme</button>
       </div>
       <div id="view"></div>

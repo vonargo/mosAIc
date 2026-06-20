@@ -1,55 +1,126 @@
 // Boot + the command bar (the control plane).
 //
 // The command bar is chrome — persistent controls the surface can't reshape
-// away, left → right: sidebar toggle · "Direct the surface" + task chips +
-// Composer + Reset · theme toggle. Tesserae are the content plane an overlay
-// reshapes. Applying a task chip or a Composer overlay sets STATE.overlay and
-// re-routes; the render path reads the effective surface, so the sidebar and
-// tiles reshape together. Only the chips are re-rendered here; everything else
-// is static markup wired once.
+// away, left → right: sidebar toggle · ▦ prompt + suggestions · Composer ·
+// Reset · account · theme. The prompt is the main driver: signed in, a typed
+// task is sent to a model that emits an overlay (billed to the viewer, see
+// llm.js); the example suggestions apply canned overlays instantly with no
+// sign-in. Tesserae are the content plane an overlay reshapes.
 
 import { renderNav } from './sidebar.js';
 import { handleHash, navigate } from './router.js';
 import { STATE } from './state.js';
 import { surface } from './surface.js';
-import { TASKS } from './demo.js';
+import { TASKS, taskById } from './demo.js';
 import { retheme } from './diagram.js';
 import { openComposer } from './composer.js';
+import { validateOverlay } from './overlay.js';
+import { initAuth, signIn, signOut, isSignedIn, userName, oauthAvailable, onAuthChange, generateOverlay } from './llm.js';
 
-// The task chips — the only dynamic part of the command bar (active state
-// tracks STATE.task). The rest of the bar is static chrome.
-function renderChips() {
-  const host = document.getElementById('cmd-tasks');
+const PENDING_KEY = 'mosaic-pending';   // a typed task stashed across the sign-in redirect
+
+// ── prompt + suggestions ────────────────────────────────────
+const promptEl  = () => document.getElementById('cmd-prompt');
+const suggestEl = () => document.getElementById('cmd-suggest');
+
+function renderSuggestions() {
+  const host = suggestEl();
   if (!host) return;
-  host.innerHTML = TASKS.map(t =>
-    `<button class="cmd-chip${STATE.task === t.id ? ' active' : ''}" data-task="${t.id}">${t.label}</button>`).join('');
-  host.querySelectorAll('.cmd-chip').forEach(el => el.addEventListener('click', () => {
-    const t = TASKS.find(x => x.id === el.dataset.task);
-    if (t) applyOverlay(t.overlay, { task: t.id, label: t.label });
+  host.innerHTML =
+    `<div class="suggest-head">Examples — apply instantly, no sign-in</div>` +
+    TASKS.map(t => `<button class="suggest-item" type="button" role="option" data-task="${t.id}">
+        <span class="suggest-label">${t.label}</span><span class="suggest-hint">${t.hint || ''}</span>
+      </button>`).join('');
+  host.querySelectorAll('.suggest-item').forEach(el => el.addEventListener('mousedown', e => {
+    e.preventDefault();   // fire before the input's blur (which hides the list)
+    const t = taskById(el.dataset.task);
+    if (t) { hideSuggest(); applyOverlay(t.overlay, { task: t.id, label: t.label }); promptEl()?.blur(); }
   }));
+}
+
+function showSuggest() { const s = suggestEl(); if (s && !promptEl().value.trim()) s.hidden = false; }
+function hideSuggest() { const s = suggestEl(); if (s) s.hidden = true; }
+
+async function submitPrompt() {
+  const task = promptEl().value.trim();
+  if (!task) { showSuggest(); return; }
+  if (!isSignedIn()) {
+    if (oauthAvailable()) {
+      sessionStorage.setItem(PENDING_KEY, task);   // resume it after the redirect
+      toast('Signing in with Hugging Face…');
+      signIn();
+    } else {
+      toast('Sign-in (and typed tasks) works on the deployed Space. Here, try an example or the Composer.');
+      showSuggest();
+    }
+    return;
+  }
+  await runTask(task);
+}
+
+async function runTask(task) {
+  const form = document.getElementById('cmd-form');
+  const input = promptEl();
+  const spinner = document.querySelector('.cmd-spinner');
+  hideSuggest();
+  form?.classList.add('thinking'); input.disabled = true; if (spinner) spinner.hidden = false;
+  try {
+    const overlay = await generateOverlay(task);                 // calls the model, validates
+    document.dispatchEvent(new CustomEvent('mosaic:apply', { detail: { overlay, label: clip(task) } }));
+    input.value = '';
+  } catch (e) {
+    toast(e?.message || 'Could not generate an overlay.');
+  } finally {
+    form?.classList.remove('thinking'); input.disabled = false; if (spinner) spinner.hidden = true;
+    input.focus();
+  }
+}
+
+const clip = (s) => s.length > 42 ? s.slice(0, 41) + '…' : s;
+
+// ── account control ─────────────────────────────────────────
+function renderAccount() {
+  const btn = document.getElementById('cmd-account');
+  if (!btn) return;
+  const inb = isSignedIn();
+  btn.textContent = inb ? '@' + userName() : 'Sign in';
+  btn.classList.toggle('in', inb);
+  btn.title = inb ? 'Sign out'
+    : (oauthAvailable() ? 'Sign in with Hugging Face' : 'Sign-in is available on the deployed Space');
+  btn.setAttribute('aria-label', inb ? 'Signed in — click to sign out' : 'Sign in with Hugging Face');
+}
+
+// ── overlay application (content plane) ─────────────────────
+// Route to a view, re-rendering even when it's already the current route —
+// setting an unchanged hash fires no `hashchange`, so editing the view you're on
+// (or resetting while already on base) would otherwise not repaint.
+function route(target) {
+  const cur = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+  if (target && target !== cur) navigate(target);   // hashchange → handleHash
+  else handleHash();                                // same route → render now
 }
 
 function applyOverlay(overlay, { task = null, label = null } = {}) {
   STATE.overlay = overlay || {};
   STATE.task = task;
+  persistSurface();
 
   const views = surface().views;
   const target =
-    overlay?.views?.[0]?.id ||                                  // jump to what was just emitted
+    overlay?.views?.[0]?.id ||
     (views.find(v => v.id === STATE.route) ? STATE.route : views[0]?.id);
 
   flashReshape();
-  navigate(target);          // → handleHash re-renders the view + sidebar
-  renderChips();
+  route(target);
   if (label) toast(`Reconfigured · ${label}`);
 }
 
 function resetOverlay() {
   STATE.overlay = {};
   STATE.task = null;
+  persistSurface();
   flashReshape();
-  navigate(surface().views[0]?.id);
-  renderChips();
+  route(surface().views[0]?.id);
   toast('Reset to base');
 }
 
@@ -68,24 +139,75 @@ function toast(msg) {
   el.textContent = msg;
   document.body.appendChild(el);
   requestAnimationFrame(() => el.classList.add('show'));
-  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 2200);
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 2600);
+}
+
+// Persist the reshaped surface (per tab) so a reload — and the sign-in redirect —
+// restores it instead of dropping back to Start Here. Validated on the way back
+// in, so a stale/corrupt value can't break the render.
+const SURFACE_KEY = 'mosaic-surface';
+function persistSurface() {
+  try {
+    const ov = STATE.overlay;
+    if (ov && (ov.views?.length || ov.remove?.length))
+      sessionStorage.setItem(SURFACE_KEY, JSON.stringify({ overlay: ov, task: STATE.task }));
+    else sessionStorage.removeItem(SURFACE_KEY);
+  } catch { /* storage unavailable — just don't persist */ }
+}
+function restoreSurface() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(SURFACE_KEY) || 'null');
+    if (!saved?.overlay) return;
+    const v = validateOverlay(saved.overlay);
+    if (v.ok) { STATE.overlay = v.overlay; STATE.task = saved.task || null; }
+  } catch { /* corrupt value — ignore, fall back to base */ }
 }
 
 function boot() {
-  renderChips();
+  restoreSurface();   // bring back the reshaped surface after a reload / redirect
+  renderSuggestions();
   renderNav();
   handleHash();
   window.addEventListener('hashchange', handleHash);
 
-  // Composer + chips emit the same events; the Composer button opens the drawer.
-  document.addEventListener('mosaic:apply', e => applyOverlay(e.detail.overlay, { label: e.detail.label || 'Custom overlay' }));
+  // Apply path — both the Composer and the model dispatch mosaic:apply. Validate
+  // defensively here so any bad overlay degrades to a toast, never a broken surface.
+  document.addEventListener('mosaic:apply', e => {
+    const v = validateOverlay(e.detail?.overlay);
+    if (!v.ok) { toast('Invalid overlay — ' + v.error); return; }
+    applyOverlay(v.overlay, { label: e.detail.label || 'Custom overlay' });
+  });
   document.addEventListener('mosaic:reset', resetOverlay);
   document.getElementById('composer-open')?.addEventListener('click', openComposer);
   document.getElementById('cmd-reset')?.addEventListener('click', resetOverlay);
 
-  // Sidebar collapse. Lives in the command bar so it stays reachable when the
-  // sidebar is hidden — collapse *and* re-open (the old in-sidebar button hid
-  // itself on collapse). State persisted in localStorage.
+  // Prompt
+  const form = document.getElementById('cmd-form');
+  const input = promptEl();
+  form?.addEventListener('submit', e => { e.preventDefault(); submitPrompt(); });
+  input?.addEventListener('focus', showSuggest);
+  input?.addEventListener('input', () => (input.value.trim() ? hideSuggest() : showSuggest()));
+  input?.addEventListener('blur', () => setTimeout(hideSuggest, 120));   // let a suggestion click land
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') hideSuggest(); });
+
+  // Account / auth
+  renderAccount();
+  onAuthChange(renderAccount);
+  document.getElementById('cmd-account')?.addEventListener('click', () => {
+    if (isSignedIn()) { signOut(); toast('Signed out'); }
+    else if (oauthAvailable()) signIn();
+    else toast('Sign-in is available on the deployed Hugging Face Space.');
+  });
+  initAuth().then(() => {
+    renderAccount();
+    const pending = sessionStorage.getItem(PENDING_KEY);
+    if (!pending) return;
+    sessionStorage.removeItem(PENDING_KEY);
+    if (isSignedIn()) { if (input) input.value = pending; runTask(pending); }
+  });
+
+  // Sidebar collapse — in the command bar so it's reachable when the sidebar is
+  // hidden (collapse *and* re-open). Persisted; the chevron rolls with the dock.
   const app = document.getElementById('app');
   const sbToggle = document.getElementById('sb-toggle');
   const syncSb = () => {
@@ -103,8 +225,7 @@ function boot() {
   });
 
   // Theme toggle (far right). data-theme is seeded pre-paint by the inline
-  // <head> script; here we flip + persist, sync the button, and repaint Mermaid
-  // diagrams to match (a rendered SVG doesn't re-theme itself).
+  // <head> script; here we flip + persist, sync the button, and repaint diagrams.
   const root = document.documentElement;
   const themeBtn = document.getElementById('theme-toggle');
   const syncThemeBtn = (t) => {

@@ -6,6 +6,8 @@
 // mosaic:reset events the task chips use. Tesserae stay pure content.
 
 import { escapeHtml } from './utils.js';
+import { validateOverlay } from './overlay.js';
+import { STATE } from './state.js';
 
 // Pre-filled sample: the exact JSON an LLM emits. Applying it adds a Notes view
 // to the sidebar — proof the surface is live.
@@ -60,8 +62,10 @@ function build() {
     let parsed;
     try { parsed = JSON.parse(ta.value); }
     catch (e) { msg.textContent = 'Invalid JSON — ' + e.message; msg.className = 'composer-msg err'; return; }
+    const v = validateOverlay(parsed);
+    if (!v.ok) { msg.textContent = 'Invalid overlay — ' + v.error; msg.className = 'composer-msg err'; return; }
     clear();
-    document.dispatchEvent(new CustomEvent('mosaic:apply', { detail: { overlay: parsed, label: 'Composer' } }));
+    document.dispatchEvent(new CustomEvent('mosaic:apply', { detail: { overlay: v.overlay, label: 'Composer' } }));
     closeComposer();
   });
 
@@ -77,10 +81,22 @@ function build() {
   return drawer;
 }
 
+// Seed the editor with the overlay that's *currently applied*, so you edit the
+// surface you're looking at (e.g. tweak an example you just opened) instead of
+// always emitting a fresh one. On the base — nothing applied — show the sample.
+function seedJson() {
+  const ov = STATE.overlay;
+  return (ov && Array.isArray(ov.views) && ov.views.length) ? JSON.stringify(ov, null, 2) : SAMPLE;
+}
+
 export function openComposer() {
   const d = drawer || build();
+  const ta = d.querySelector('.composer-input');
+  ta.value = seedJson();
+  const msg = d.querySelector('.composer-msg');
+  msg.textContent = ''; msg.className = 'composer-msg';
   d.classList.add('open');
-  requestAnimationFrame(() => d.querySelector('.composer-input').focus());
+  requestAnimationFrame(() => ta.focus());
 }
 
 export function closeComposer() {

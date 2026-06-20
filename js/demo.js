@@ -7,6 +7,7 @@ export const TASKS = [
   {
     id: 'explain',
     label: 'Explain a codebase',
+    hint: 'overview · architecture · a key file',
     overlay: {
       views: [
         {
@@ -99,6 +100,7 @@ def _one(path, size):
   {
     id: 'debug',
     label: 'Debug an error',
+    hint: 'traceback · hypotheses · the fix',
     overlay: {
       views: [
         {
@@ -173,6 +175,7 @@ IndexError: list index out of range`,
   {
     id: 'plan',
     label: 'Plan a feature',
+    hint: 'spec · milestones · rollout',
     overlay: {
       views: [
         {
@@ -232,6 +235,50 @@ IndexError: list index out of range`,
               type: 'markdown', title: 'Risks',
               body: `- **Alpha loss** converting to JPEG — warn and skip, don't fail silently.
 - **Cache invalidation** — bumping the key re-renders everything once; acceptable.`,
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
+    id: 'trip',
+    label: 'Plan a trip',
+    hint: 'itinerary · checklist · good to know',
+    overlay: {
+      views: [
+        {
+          id: 'trip',
+          title: 'Trip',
+          heading: 'A weekend in Lisbon',
+          subtitle: 'two days, on foot',
+          layout: 'grid',
+          tesserae: [
+            {
+              type: 'markdown', span: 2, title: 'The plan',
+              body: `Two unhurried days through **Lisbon** — old quarters and viewpoints — with a Sunday day-trip west to Sintra. Built for an easy pace, not a checklist march.`,
+            },
+            {
+              type: 'table', title: 'Itinerary',
+              columns: ['Day', 'Highlights'],
+              rows: [
+                ['Fri', 'Alfama lanes · Sé cathedral · sunset at Portas do Sol'],
+                ['Sat', 'Belém tower · pastéis de Belém · tram 28'],
+                ['Sun', 'Day-trip to Sintra · Pena Palace'],
+              ],
+            },
+            {
+              type: 'tasks', title: 'Before you go',
+              items: [
+                { text: 'Book the Sintra train (Rossio → Sintra)', done: false },
+                { text: 'Reserve a pastéis de Belém slot', done: false },
+                { text: 'Download an offline map', done: false },
+              ],
+            },
+            {
+              type: 'note', tone: 'info', title: 'Good to know',
+              body: `Lisbon is **hilly** — comfortable shoes. Trams fill up by mid-morning, so go early. Budget roughly €80/day excluding the hotel.`,
             },
           ],
         },

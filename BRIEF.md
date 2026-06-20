@@ -2,6 +2,8 @@
 
 *For the session that builds this out. Read this first, then `CODEMAP.md` for the code orientation.*
 
+> **Status — shipped (and beyond this brief).** This is the original planning brief, kept for intent; it's now historical. MosAIc was built out and then past the "ship the shell" scope below: the command bar is a **prompt**, and it ships a **bring-your-own-LLM** model path (HF OAuth + Inference Providers, billed to the viewer — the model call that was "out of scope, likely v2" here). The "What's staged" file list below is **superseded** — for the real files see **[CODEMAP.md](CODEMAP.md)**, and for the contract see **[SCHEMA.md](SCHEMA.md)**.
+
 ## What MosAIc is
 
 MosAIc is a **reconfigurable HTML interface for directing an LLM** — an alternative to the linear chat transcript. Instead of scrolling a conversation, you work in a structured, persistent surface: a sidebar of views + a main panel area. The LLM can **reshape the layout and content to fit the task** — emit a structure, the surface renders it.
