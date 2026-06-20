@@ -13,6 +13,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <!-- Seed the theme before first paint so a dark user never sees a light flash. -->
+  <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('mosaic-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'))}catch(e){}</script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -23,6 +25,7 @@
         <div class="brand-title">MosAIc</div>
         <div class="brand-sub">a reconfigurable surface for directing an LLM</div>
       </div>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">◐ Theme</button>
       <nav id="nav"></nav>
     </aside>
     <main id="main">

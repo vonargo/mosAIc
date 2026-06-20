@@ -14,6 +14,8 @@
   --warn-soft: #fdf3e7;
   --ok:        #15803d;   /* green */
   --ok-soft:   #edf7f0;
+  --code-bg:   #1d1d1f;   /* code-slab bg; darkened in dark theme to stay distinct from --panel */
+  color-scheme: light;
   --sidebar-w: 280px;
   --max-read:  760px;
   --max-wide:  1120px;
@@ -22,6 +24,28 @@
   --sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
   --display: "Syne", var(--sans);
 }
+
+  /* Dark theme — same variables, dark values. Toggled by data-theme on <html>. */
+  :root[data-theme="dark"] {
+    --bg: #15161a;  --panel: #1d1f24;
+    --ink: #e9e9ec; --ink-soft: #b4b6bd; --ink-faint: #7e8088;
+    --line: #2d2f37; --line-soft: #24262c;
+    --accent: #818cf8; --accent-soft: #262a45;
+    --warn: #fbbf24; --warn-soft: #2c2616;
+    --ok: #4ade80;   --ok-soft: #16271d;
+    --code-bg: #0f1014;   /* darker than --panel so code slabs stay distinct */
+    color-scheme: dark;
+  }
+  /* the command bar bg is hardcoded light (for its blur) — it needs a dark value too */
+  :root[data-theme="dark"] .cmdbar { background: rgba(21, 22, 26, .82); }
+  html { transition: background-color .2s ease, color .2s ease; } 
+
+  .theme-toggle {
+    margin-top: 12px; font: inherit; font-size: 12.5px; color: var(--ink-faint);
+    background: none; border: 1px solid var(--line); border-radius: 999px;
+    padding: 4px 11px; cursor: pointer;
+  } 
+  .theme-toggle:hover { color: var(--ink); border-color: var(--ink-faint); }
 
 * { box-sizing: border-box; }
 
@@ -154,7 +178,7 @@ html, body {
 #view li { margin: 4px 0; }
 
 code { font-family: var(--mono); font-size: 0.88em; background: var(--line-soft); padding: 1px 5px; border-radius: 5px; }
-pre  { background: #1d1d1f; color: #f2f2f2; padding: 16px 18px; border-radius: var(--radius); overflow-x: auto; line-height: 1.5; margin: 0 0 14px; }
+pre  { background: var(--code-bg); color: #f2f2f2; padding: 16px 18px; border-radius: var(--radius); overflow-x: auto; line-height: 1.5; margin: 0 0 14px; }
 pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
 .code-block pre { margin: 0 0 14px; }
 
@@ -231,10 +255,10 @@ pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
 .composer-input {
   width: 100%; min-height: 210px; resize: vertical;
   font-family: var(--mono); font-size: 12.5px; line-height: 1.55;
-  color: var(--ink); background: #fcfcfc;
+  color: var(--ink); background: var(--bg);
   border: 1px solid var(--line); border-radius: 8px; padding: 12px 13px;
 }
-.composer-input:focus { outline: none; border-color: var(--accent); background: #fff; }
+.composer-input:focus { outline: none; border-color: var(--accent); background: var(--panel); }
 .composer-row { display: flex; align-items: center; gap: 10px; margin-top: 11px; }
 .composer-apply {
   font: inherit; font-size: 13px; font-weight: 500; padding: 7px 15px;
@@ -256,7 +280,7 @@ pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
 
 .toast {
   position: fixed; bottom: 26px; left: 50%; transform: translate(-50%, 14px);
-  background: var(--ink); color: #fff; font-size: 13px; font-weight: 500;
+  background: var(--ink); color: var(--bg); font-size: 13px; font-weight: 500;
   padding: 9px 17px; border-radius: 999px; z-index: 60; opacity: 0;
   box-shadow: 0 8px 28px rgba(0, 0, 0, .2); transition: opacity .3s ease, transform .3s ease;
 }

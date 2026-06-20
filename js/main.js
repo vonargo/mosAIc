@@ -11,6 +11,7 @@ import { handleHash, navigate } from './router.js';
 import { STATE } from './state.js';
 import { surface } from './surface.js';
 import { TASKS } from './demo.js';
+import { retheme } from './diagram.js';
 
 const MOSAIC_MARK =
   `<svg class="cmd-mark" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
@@ -106,6 +107,26 @@ function boot() {
   document.getElementById('sb-toggle').addEventListener('click', () => {
     app.classList.toggle('sb-collapsed');
     localStorage.setItem('mosaic-sb-collapsed', app.classList.contains('sb-collapsed') ? '1' : '0');
+  });
+  // Theme toggle. data-theme is seeded pre-paint by the inline <head> script
+  // (so no flash on load); here we just flip + persist it, sync the button, and
+  // repaint Mermaid diagrams to match (rendered SVGs don't re-theme themselves).
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('theme-toggle');
+  const syncThemeBtn = (t) => {
+    if (!themeBtn) return;
+    const dark = t === 'dark';
+    themeBtn.textContent = `${dark ? '☀' : '☾'} Theme`;
+    themeBtn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+    themeBtn.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+  };
+  syncThemeBtn(root.getAttribute('data-theme'));
+  themeBtn?.addEventListener('click', () => {
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem('mosaic-theme', next);
+    syncThemeBtn(next);
+    retheme();
   });
 
   maybeAutoDemo();
