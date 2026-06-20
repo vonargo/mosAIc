@@ -15,7 +15,14 @@ export function mdInline(t) {
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/(^|[\s(])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')
     .replace(/~~([^~]+)~~/g, '<s>$1</s>')
-    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, text, url) => {
+      // Allow relative/anchor URLs and http(s)/mailto only; neutralize the rest
+      // (e.g. javascript:, data:) — this is shared, paste-and-trade overlay JSON.
+      const scheme = url.match(/^([a-z][a-z0-9+.-]*):/i);
+      return (!scheme || /^(https?|mailto)$/i.test(scheme[1]))
+        ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`
+        : `<a href="#" rel="noopener noreferrer">${text}</a>`;
+    });
 }
 
 /* Markdown → HTML. Small, dependency-free. Covers headings, lists, tables,

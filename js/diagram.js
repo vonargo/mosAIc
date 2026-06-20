@@ -5,6 +5,12 @@
 // than taking the app down. That keeps a static, no-network open of index.html
 // working — just without rendered graphs.
 
+// Pinned to an exact version on purpose. A floating major (mermaid@11) lets a
+// minor/patch release silently change — or break — diagram rendering. Bump this
+// deliberately, then re-test. Verify the URL 200s before changing it.
+const MERMAID_VERSION = '11.15.0';
+const MERMAID_URL = `https://cdn.jsdelivr.net/npm/mermaid@${MERMAID_VERSION}/dist/mermaid.esm.min.mjs`;
+
 let mermaid = null;
 let tried = false;
 
@@ -12,7 +18,7 @@ async function ensure() {
   if (mermaid || tried) return mermaid;
   tried = true;
   try {
-    const mod = await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs');
+    const mod = await import(MERMAID_URL);
     mermaid = mod.default;
     mermaid.initialize({
       startOnLoad: false,
