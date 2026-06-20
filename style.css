@@ -1,0 +1,105 @@
+/* MosAIc — base aesthetic. Calm, lean, hairline-driven. Theme via the vars below. */
+
+:root {
+  --bg:        #fbfbfa;
+  --panel:     #ffffff;
+  --ink:       #1d1d1f;
+  --ink-soft:  #555;
+  --ink-faint: #8a8a8a;
+  --line:      #e7e7e4;
+  --line-soft: #f0f0ed;
+  --accent:    #4f46e5;   /* indigo */
+  --accent-soft:#eef0ff;
+  --sidebar-w: 280px;
+  --max-read:  760px;
+  --radius:    10px;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --display: "Syne", var(--sans);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; height: 100%;
+  background: var(--bg); color: var(--ink);
+  font-family: var(--sans); font-size: 15px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app { display: flex; height: 100vh; overflow: hidden; }
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+#sidebar {
+  width: var(--sidebar-w); flex: 0 0 var(--sidebar-w);
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+  padding: 22px 18px; overflow-y: auto;
+  position: relative; transition: margin-left .18s ease;
+}
+.sb-toggle {
+  position: absolute; top: 16px; right: 12px;
+  width: 24px; height: 24px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink-faint);
+  border-radius: 6px; cursor: pointer; line-height: 1;
+}
+.sb-toggle:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+.brand { margin-bottom: 26px; }
+.brand-title { font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; }
+.brand-sub  { color: var(--ink-faint); font-size: 12.5px; margin-top: 3px; }
+
+.nav-group-label {
+  font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-faint); margin: 18px 0 8px;
+}
+.nav-item {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 7px 9px; border-radius: 8px; cursor: pointer;
+  color: var(--ink-soft); font-size: 14px;
+}
+.nav-item:hover  { background: var(--line-soft); color: var(--ink); }
+.nav-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+
+/* ── Main ────────────────────────────────────────────────── */
+#main { flex: 1; overflow-y: auto; padding: 40px 48px 96px; }
+#view { max-width: var(--max-read); margin: 0 auto; }
+
+#app.sb-collapsed #sidebar { margin-left: calc(-1 * var(--sidebar-w)); }
+
+/* ── Document / markdown surface ─────────────────────────── */
+.doc-title { font-family: var(--display); font-weight: 700; font-size: 30px; letter-spacing: -0.02em; margin: 0 0 6px; }
+.doc-sub   { color: var(--ink-faint); margin: 0 0 32px; }
+
+#view h1, #view h2, #view h3, .md-h {
+  font-family: var(--display); font-weight: 600; letter-spacing: -0.01em;
+  line-height: 1.3; margin: 32px 0 10px;
+}
+.md-h2 { font-size: 21px; } .md-h3 { font-size: 17px; } .md-h4 { font-size: 15px; color: var(--ink-soft); }
+#view p { margin: 0 0 14px; }
+#view a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
+#view a:hover { border-color: var(--accent); }
+#view ul, #view ol { margin: 0 0 14px; padding-left: 22px; }
+#view li { margin: 4px 0; }
+
+code { font-family: var(--mono); font-size: 0.88em; background: var(--line-soft); padding: 1px 5px; border-radius: 5px; }
+pre  { background: #1d1d1f; color: #f2f2f2; padding: 16px 18px; border-radius: var(--radius); overflow-x: auto; line-height: 1.5; }
+pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
+.code-block pre { margin: 0 0 16px; }
+
+.md-quote { border-left: 3px solid var(--accent); margin: 0 0 16px; padding: 2px 0 2px 16px; color: var(--ink-soft); }
+.md-hr { border: 0; border-top: 1px solid var(--line); margin: 28px 0; }
+
+.md-table { border-collapse: collapse; width: 100%; margin: 0 0 18px; font-size: 14px; }
+.md-table th, .md-table td { border: 1px solid var(--line); padding: 8px 11px; text-align: left; vertical-align: top; }
+.md-table th { background: var(--line-soft); font-weight: 600; }
+
+.card {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 22px 24px; margin: 0 0 18px;
+}
+
+@media (max-width: 720px) {
+  #main { padding: 28px 20px 80px; }
+  :root { --sidebar-w: 230px; }
+}
