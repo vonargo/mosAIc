@@ -4,8 +4,16 @@ emoji: 🎨
 colorFrom: indigo
 colorTo: gray
 sdk: static
-pinned: false
+pinned: true
 license: mit
+short_description: "Reconfigurable LLM surface that reshapes per task"
+tags:
+  - llm
+  - inference-providers
+  - oauth
+  - ui
+  - coauthoring
+  - agent
 hf_oauth: true
 hf_oauth_scopes:
   - inference-api
@@ -15,7 +23,7 @@ hf_oauth_scopes:
 
 **A reconfigurable surface for directing an LLM — the panels reshape per task, instead of a linear chat transcript.**
 
-Most LLM interfaces are a scroll: one conversation, no matter the work. MosAIc is a *surface* instead — a sidebar of views and a field of typed tiles. The model emits a small JSON **overlay** describing the shape it wants; MosAIc lays it out. Same mechanism, any task.
+Most LLM interfaces are a scroll: one conversation, no matter the work. MosAIc is a *surface* instead — a sidebar of views and a field of typed tiles. The model emits a small JSON **overlay** describing the shape it wants; MosAIc lays it out. Keep asking and the surface **evolves** — each task patches the current one instead of starting over. Same mechanism, any task.
 
 It's **bring-your-own-LLM**: sign in with Hugging Face, type a task, and it's sent to a model on [Inference Providers](https://huggingface.co/docs/inference-providers) billed to **your own account** — no backend, no shared key. MosAIc is the surface, not the model.
 
