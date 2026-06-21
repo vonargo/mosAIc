@@ -162,3 +162,12 @@ test('okfToOverlay: carries OKF metadata + the sourced/unsourced provenance sign
   const refunds = overlay.views.find((v) => v.id === 'playbook').tesserae[0];
   assert.equal(refunds.okf.sourced, false);               // no resource, no citations → unsourced
 });
+
+test('okfToOverlay: in-bundle cross-links are rewritten to in-app routes; external links untouched', () => {
+  const { docs } = parseOkfBundle(BUNDLE);
+  const overlay = okfToOverlay(docs);
+  const orders = overlay.views.find((v) => v.id === 'bigquery-table').tesserae[0];
+  assert.match(orders.body, /\[customers\]\(#bigquery-table\)/);   // /tables/customers.md → its view
+  assert.doesNotMatch(orders.body, /customers\.md/);               // original target gone
+  assert.match(orders.body, /\(https:\/\/console\.cloud\.google\.com/);  // citation URL left alone
+});

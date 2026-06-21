@@ -115,3 +115,9 @@ test('mdInline: neutralizes a javascript: link, preserves http(s)', () => {
   assert.match(bad, /href="#"/);
   assert.doesNotMatch(bad, /javascript:/);
 });
+
+test('mdInline: in-app # links stay in the same tab (no target=_blank)', () => {
+  const a = mdInline('[Customers](#bigquery-table)');
+  assert.match(a, /href="#bigquery-table"/);
+  assert.doesNotMatch(a, /target=/);
+});

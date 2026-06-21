@@ -117,23 +117,57 @@ export function parseOkfBundle(files) {
   return { docs, reserved, skipped };
 }
 
+// Resolve an OKF link target to a bundle-relative path. Absolute `/a/b.md` stays;
+// `./` and `../` resolve against the linking doc's directory.
+function resolveBundlePath(target, docPath) {
+  if (target.startsWith('/')) return target;
+  const dir = docPath.slice(0, docPath.lastIndexOf('/') + 1);
+  const out = [];
+  for (const p of (dir + target).split('/')) {
+    if (p === '' || p === '.') continue;
+    if (p === '..') out.pop(); else out.push(p);
+  }
+  return '/' + out.join('/');
+}
+
+// Rewrite in-bundle cross-links to in-app routes (#viewId of the concept they point
+// at), so "connectivity as reading" navigates instead of 404-ing. External links and
+// bare anchors are left untouched.
+function rewriteCrossLinks(body, docPath, pathToView) {
+  return body.replace(/(\]\()([^)\s]+)(\))/g, (m, open, target, close) => {
+    if (/^(https?:|mailto:|#)/i.test(target)) return m;
+    const view = pathToView.get(resolveBundlePath(target.replace(/#.*$/, ''), docPath));
+    return view ? `${open}#${view}${close}` : m;
+  });
+}
+
 // Concepts → a MosAIc overlay: one view per `type`, one markdown tessera per doc.
 // OKF metadata rides under `okf` on each tessera for the filter + provenance layer
 // (the OKF render path reads it; effective()'s shallow merge preserves it). `sourced`
 // is the provenance signal — true only if the concept cites a resource or sources.
+// Cross-links between concepts are rewritten to in-app routes.
 export function okfToOverlay(docs) {
+  const list = docs || [];
   const byType = new Map();
-  for (const d of docs || []) {
+  for (const d of list) {
     if (!byType.has(d.type)) byType.set(d.type, []);
     byType.get(d.type).push(d);
   }
-  const views = [], seen = new Set();
+
+  // Assign one view id per type, and map every concept path to its view.
+  const typeId = new Map(), pathToView = new Map(), seen = new Set();
   for (const [type, group] of byType) {
     let id = slug(type) || 'concepts';
     while (seen.has(id)) id += '-2';
     seen.add(id);
+    typeId.set(type, id);
+    for (const d of group) pathToView.set(d.path, id);
+  }
+
+  const views = [];
+  for (const [type, group] of byType) {
     views.push({
-      id,
+      id: typeId.get(type),
       title: type,
       heading: type,
       subtitle: `${group.length} ${group.length === 1 ? 'concept' : 'concepts'}`,
@@ -141,7 +175,7 @@ export function okfToOverlay(docs) {
       tesserae: group.map((d) => ({
         type: 'markdown',
         title: d.title,
-        body: d.body,
+        body: rewriteCrossLinks(d.body, d.path, pathToView),
         okf: {
           path: d.path, conceptType: d.type, description: d.description,
           resource: d.resource, timestamp: d.timestamp, tags: d.tags,

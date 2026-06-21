@@ -16,8 +16,10 @@ export function mdInline(t) {
     .replace(/(^|[\s(])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')
     .replace(/~~([^~]+)~~/g, '<s>$1</s>')
     .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, text, url) => {
-      // Allow relative/anchor URLs and http(s)/mailto only; neutralize the rest
-      // (e.g. javascript:, data:) — this is shared, paste-and-trade overlay JSON.
+      // In-app routes / anchors stay in the same tab (OKF cross-links resolve to #viewId).
+      if (url[0] === '#') return `<a href="${url}">${text}</a>`;
+      // Allow http(s)/mailto only; neutralize the rest (e.g. javascript:, data:) —
+      // this is shared, paste-and-trade overlay JSON.
       const scheme = url.match(/^([a-z][a-z0-9+.-]*):/i);
       return (!scheme || /^(https?|mailto)$/i.test(scheme[1]))
         ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`
