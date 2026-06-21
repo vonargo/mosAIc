@@ -57,7 +57,7 @@ A **surface** holds **views**; a view lays out **tesserae** — the typed conten
 - `js/view.js`, `js/router.js`, `js/sidebar.js` — the render path
 - `js/diagram.js` — diagram tiles via Mermaid (loaded lazily, degrades to source text offline)
 
-See **[CODEMAP.md](CODEMAP.md)** for the file-by-file orientation and **[SCHEMA.md](SCHEMA.md)** for the overlay contract.
+See **[CODEMAP.md](CODEMAP.md)** for the file-by-file orientation, **[SCHEMA.md](SCHEMA.md)** for the overlay contract, and **[ROADMAP.md](ROADMAP.md)** for what's next (the wire-format options, near-term improvements, and the test plan). Pure-core tests run with `node --test`.
 
 ## License
 

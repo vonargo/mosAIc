@@ -1,0 +1,10 @@
+{
+  "name": "mosaic",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A reconfigurable surface for directing an LLM — a static HuggingFace Space.",
+  "scripts": {
+    "test": "node --test"
+  }
+}

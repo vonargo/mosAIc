@@ -1,6 +1,6 @@
 # MosAIc — code map
 
-*File-by-file orientation. Pairs with `BRIEF.md` (vision) and `SCHEMA.md` (the overlay contract).*
+*File-by-file orientation. Pairs with `BRIEF.md` (vision), `SCHEMA.md` (the overlay contract), and `ROADMAP.md` (what's next + the wire-format thinking). Pure-core tests: `node --test`.*
 
 ## What's here
 
