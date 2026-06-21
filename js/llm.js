@@ -115,6 +115,7 @@ export async function generateOverlay(task, current = null) {
   const client = new InferenceClient(auth.accessToken);
 
   const hasCurrent = current && Array.isArray(current.views) && current.views.length > 0;
+  const isOkf = !!(hasCurrent && current.views.some((v) => Array.isArray(v.tesserae) && v.tesserae.some((t) => t && t.okf)));
   const system = (await schema()) +
     `\n\nYou are MosAIc's overlay generator. Given a task, respond with ONLY a JSON overlay (no prose, no markdown fences) that reshapes the surface for that task: 1–3 views, each with a sensible layout and content-bearing tesserae.
 
@@ -122,7 +123,8 @@ You have NO access to the user's files, repository, or any external or private d
 
 When a "Current surface" is included below, the task may ask you to MODIFY or EXTEND it. Emit a patch, not a fresh surface: reuse a view's "id" to edit it (omit "tesserae" to keep that view's tiles, or include them to replace), add a new "id" to append a view, and "remove": ["id"] to drop one. Include only what changes. Start over with a brand-new surface only if the task is clearly unrelated to what's already there.
 
-When you do have enough — a self-contained task, or content included inline — use specific, realistic content, never lorem-ipsum placeholders.`;
+When you do have enough — a self-contained task, or content included inline — use specific, realistic content, never lorem-ipsum placeholders.` +
+    (isOkf ? `\n\nThe current surface is a loaded **OKF knowledge base** — concept documents, each a tessera carrying \`okf\` metadata (\`conceptType\`, \`tags\`, \`resource\`, \`timestamp\`, \`citations\`, and a \`sourced\` boolean). The task is likely to QUERY or REORGANIZE this knowledge: list or filter concepts by type or tag, summarize them, relate them, or find gaps (e.g. concepts where \`sourced\` is false). Answer ONLY from the concepts actually present — never invent concepts, sources, or fields — and you may surface each concept's provenance.` : ``);
   const ask = hasCurrent ? `Current surface (JSON):\n${JSON.stringify(current)}\n\nTask: ${task}` : task;
   const base = [{ role: 'system', content: system }, ...fewShot(), { role: 'user', content: ask }];
 
