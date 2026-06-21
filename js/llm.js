@@ -115,7 +115,9 @@ export async function generateOverlay(task) {
   const client = new InferenceClient(auth.accessToken);
 
   const system = (await schema()) +
-    `\n\nYou are MosAIc's overlay generator. Given a task, respond with ONLY a JSON overlay (no prose, no markdown fences) that reshapes the surface for that task: 1–3 views, each with a sensible layout and content-bearing tesserae. Use realistic, specific content — not placeholders.`;
+    `\n\nYou are MosAIc's overlay generator. Given a task, respond with ONLY a JSON overlay (no prose, no markdown fences) that reshapes the surface for that task: 1–3 views, each with a sensible layout and content-bearing tesserae.
+
+You have NO access to the user's files, repository, or any external or private data — only the text of their task. If the task refers to specific content you don't have (e.g. "this repo", "my code", "the error above") and it isn't included in the task text, do NOT invent details. Instead, build a surface that asks for it — a note explaining you need the content, plus a tessera showing what to paste — and it will reshape once they provide it. When you do have enough — a self-contained task, or content included inline — use specific, realistic content, never lorem-ipsum placeholders.`;
   const base = [{ role: 'system', content: system }, ...fewShot(), { role: 'user', content: task }];
 
   // 1) guided JSON
