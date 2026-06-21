@@ -14,7 +14,7 @@ import { surface } from './surface.js';
 import { TASKS, taskById } from './demo.js';
 import { retheme } from './diagram.js';
 import { openComposer } from './composer.js';
-import { openOkfBundle } from './okf-load.js';
+import { openOkfBundle, openOkfSample } from './okf-load.js';
 import { validateOverlay } from './overlay.js';
 import { initAuth, signIn, signOut, isSignedIn, userName, oauthAvailable, onAuthChange, generateOverlay } from './llm.js';
 
@@ -31,11 +31,16 @@ function renderSuggestions() {
     `<div class="suggest-head">Examples — apply instantly, no sign-in</div>` +
     TASKS.map(t => `<button class="suggest-item" type="button" role="option" data-task="${t.id}">
         <span class="suggest-label">${t.label}</span><span class="suggest-hint">${t.hint || ''}</span>
-      </button>`).join('');
+      </button>`).join('') +
+    `<button class="suggest-item" type="button" role="option" data-okf="sample">
+        <span class="suggest-label">▣ Open a sample OKF bundle</span><span class="suggest-hint">Google Open Knowledge Format · rendered as a reading surface</span>
+      </button>`;
   host.querySelectorAll('.suggest-item').forEach(el => el.addEventListener('mousedown', e => {
     e.preventDefault();   // fire before the input's blur (which hides the list)
+    hideSuggest(); promptEl()?.blur();
+    if (el.dataset.okf === 'sample') { openOkfSample(); return; }
     const t = taskById(el.dataset.task);
-    if (t) { hideSuggest(); applyOverlay(t.overlay, { task: t.id, label: t.label }); promptEl()?.blur(); }
+    if (t) applyOverlay(t.overlay, { task: t.id, label: t.label });
   }));
 }
 

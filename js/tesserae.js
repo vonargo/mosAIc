@@ -51,6 +51,23 @@ const RENDERERS = {
   },
 };
 
+// Provenance strip for OKF concepts (the trust layer OKF's frontmatter lacks).
+// Rides on any tessera carrying `okf` metadata; absent otherwise. Renders a
+// sourced/unsourced badge, a sanitized source link, a freshness date, and tags.
+const okfDate = (ts) => String(ts || '').slice(0, 10);
+function okfMeta(okf) {
+  if (!okf) return '';
+  const safe = /^https?:\/\//i.test(okf.resource || '') ? okf.resource : '';
+  const bits = [okf.sourced
+    ? `<span class="okf-badge okf-sourced" title="Cites a source link or references">● sourced</span>`
+    : `<span class="okf-badge okf-unsourced" title="No resource or citations — provenance unknown">○ unsourced</span>`];
+  if (safe) bits.push(`<a class="okf-link" href="${escapeHtml(safe)}" target="_blank" rel="noopener noreferrer">source ↗</a>`);
+  if (okf.timestamp) bits.push(`<span class="okf-when">updated ${escapeHtml(okfDate(okf.timestamp))}</span>`);
+  const tags = (okf.tags || []).map((t) => `<span class="okf-tag">${escapeHtml(t)}</span>`).join('');
+  return `<div class="okf-meta">${bits.join(' <span class="okf-dot">·</span> ')}` +
+    `${tags ? `<span class="okf-tags">${tags}</span>` : ''}</div>`;
+}
+
 export function renderTessera(t, i = 0) {
   const type = t && RENDERERS[t.type] ? t.type : 'markdown';
   const fn = RENDERERS[type];
@@ -58,8 +75,10 @@ export function renderTessera(t, i = 0) {
   const head = t.title
     ? `<div class="tessera-head"><span class="tessera-title">${escapeHtml(t.title)}</span><span class="tessera-tag">${escapeHtml(type)}</span></div>`
     : '';
-  return `<section class="tessera t-${type}" style="--span:${span};--i:${i}">${head}` +
-    `<div class="tessera-body">${fn(t)}</div></section>`;
+  const sub = t.okf && t.okf.description
+    ? `<div class="tessera-sub">${escapeHtml(t.okf.description)}</div>` : '';
+  return `<section class="tessera t-${type}" style="--span:${span};--i:${i}">${head}${sub}` +
+    `<div class="tessera-body">${fn(t)}</div>${okfMeta(t.okf)}</section>`;
 }
 
 // Wire interactive tiles. Idempotent per element via a data flag.

@@ -230,6 +230,22 @@ pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
 .md-quote { border-left: 3px solid var(--accent); margin: 0 0 14px; padding: 2px 0 2px 16px; color: var(--ink-soft); }
 .md-hr { border: 0; border-top: 1px solid var(--line); margin: 24px 0; }
 
+/* OKF concept provenance — a description subtitle + the trust strip. */
+.tessera-sub { margin: -4px 0 12px; color: var(--ink-soft); font-size: 13.5px; line-height: 1.45; }
+.okf-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--line-soft);
+  font-size: 12px; color: var(--ink-faint); }
+.okf-dot { opacity: .5; }
+.okf-badge { font-weight: 600; }
+.okf-sourced { color: var(--ok); }
+.okf-unsourced { color: var(--warn); }
+.okf-link { color: var(--accent); text-decoration: none; }
+.okf-link:hover { text-decoration: underline; }
+.okf-when { color: var(--ink-faint); }
+.okf-tags { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.okf-tag { background: var(--line-soft); border: 1px solid var(--line); border-radius: 999px;
+  padding: 1px 9px; font-size: 11px; color: var(--ink-soft); }
+
 .md-table { border-collapse: collapse; width: 100%; margin: 0; font-size: 14px; }
 .md-table th, .md-table td { border: 1px solid var(--line); padding: 8px 11px; text-align: left; vertical-align: top; }
 .md-table th { background: var(--line-soft); font-weight: 600; }
