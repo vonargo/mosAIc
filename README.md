@@ -37,7 +37,7 @@ Three ways to drive it, all from the command bar:
 - **An example** (`Explain a codebase`, `Debug an error`, `Plan a feature`) → applies a canned overlay instantly, no sign-in.
 - **The Composer** → paste/edit overlay JSON and **Apply** it by hand.
 
-The typed/model path needs the OAuth app that the deployed Space provides; running locally, the **examples and Composer** still work, so you can explore the surface with no sign-in.
+The typed/model path needs the OAuth app that the deployed Space provides; running locally, the **examples and Composer** still work, so you can explore the surface with no sign-in. To deploy your own and light up the model path, see **[DEPLOY.md](DEPLOY.md)**.
 
 ## How it reshapes
 
