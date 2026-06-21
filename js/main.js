@@ -14,7 +14,7 @@ import { surface } from './surface.js';
 import { TASKS, taskById } from './demo.js';
 import { retheme } from './diagram.js';
 import { openComposer } from './composer.js';
-import { openOkfBundle, openOkfSample } from './okf-load.js';
+import { openOkfBundle, openOkfSample, okfSearch } from './okf-load.js';
 import { validateOverlay } from './overlay.js';
 import { initAuth, signIn, signOut, isSignedIn, userName, oauthAvailable, onAuthChange, generateOverlay } from './llm.js';
 
@@ -107,10 +107,19 @@ function route(target) {
   else handleHash();                                // same route → render now
 }
 
+// Show the OKF concept filter only when the surface is a loaded OKF bundle.
+function syncOkfSearch(show) {
+  const el = document.getElementById('okf-search');
+  if (!el) return;
+  el.hidden = !show;
+  if (!show) el.value = '';
+}
+
 function applyOverlay(overlay, { task = null, label = null } = {}) {
   STATE.overlay = overlay || {};
   STATE.task = task;
   persistSurface();
+  syncOkfSearch((overlay?.views || []).some(v => (v.tesserae || []).some(t => t && t.okf)));
 
   const views = surface().views;
   const target =
@@ -126,6 +135,7 @@ function resetOverlay() {
   STATE.overlay = {};
   STATE.task = null;
   persistSurface();
+  syncOkfSearch(false);
   flashReshape();
   route(surface().views[0]?.id);
   toast('Reset to base');
@@ -187,6 +197,12 @@ function boot() {
   document.addEventListener('mosaic:reset', resetOverlay);
   document.getElementById('composer-open')?.addEventListener('click', openComposer);
   document.getElementById('okf-open')?.addEventListener('click', openOkfBundle);
+  const okfSearchEl = document.getElementById('okf-search');
+  let okfSearchT;
+  okfSearchEl?.addEventListener('input', () => {
+    clearTimeout(okfSearchT);
+    okfSearchT = setTimeout(() => okfSearch(okfSearchEl.value), 250);
+  });
   document.getElementById('cmd-reset')?.addEventListener('click', resetOverlay);
   document.addEventListener('mosaic:toast', e => toast(e.detail));
 

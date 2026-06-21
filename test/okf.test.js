@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { parseOkfDoc, parseOkfBundle, okfToOverlay } from '../js/okf.js';
+import { parseOkfDoc, parseOkfBundle, okfToOverlay, okfFilter } from '../js/okf.js';
 
 const ORDERS = `---
 type: BigQuery Table
@@ -170,4 +170,18 @@ test('okfToOverlay: in-bundle cross-links are rewritten to in-app routes; extern
   assert.match(orders.body, /\[customers\]\(#bigquery-table\)/);   // /tables/customers.md → its view
   assert.doesNotMatch(orders.body, /customers\.md/);               // original target gone
   assert.match(orders.body, /\(https:\/\/console\.cloud\.google\.com/);  // citation URL left alone
+});
+
+// ── okfFilter(): deterministic search = the LLM-scoping mechanism ─
+test('okfFilter: empty returns all; a term matches across type/title/tags/body', () => {
+  const { docs } = parseOkfBundle(BUNDLE);
+  assert.equal(okfFilter(docs, '').length, docs.length);
+  assert.equal(okfFilter(docs, 'bigquery').length, 2);                            // both BigQuery Tables (by type)
+  assert.deepEqual(okfFilter(docs, 'playbook').map((d) => d.type), ['Playbook']); // by type
+});
+
+test('okfFilter: multiple words are AND-ed across the concept', () => {
+  const { docs } = parseOkfBundle(BUNDLE);
+  assert.deepEqual(okfFilter(docs, 'monthly finance').map((d) => d.title), ['Monthly Revenue']); // title + tag
+  assert.equal(okfFilter(docs, 'bigquery playbook').length, 0);                                  // no concept is both
 });

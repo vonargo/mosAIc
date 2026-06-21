@@ -187,3 +187,17 @@ export function okfToOverlay(docs) {
   }
   return { views };
 }
+
+// Filter OKF docs by a free-text query — case-insensitive match across title, type,
+// tags, description, and body; multiple words are AND'd; an empty query returns all.
+// The deterministic, model-free way to narrow a bundle — and, since the filtered set
+// re-applies as the surface, to SCOPE what a subsequent LLM query operates on. Pure.
+export function okfFilter(docs, query) {
+  const q = String(query || '').trim().toLowerCase();
+  if (!q) return docs || [];
+  const terms = q.split(/\s+/);
+  return (docs || []).filter((d) => {
+    const hay = [d.title, d.type, d.description, (d.tags || []).join(' '), d.body].join(' ').toLowerCase();
+    return terms.every((t) => hay.includes(t));
+  });
+}
