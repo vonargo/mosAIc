@@ -14,6 +14,7 @@ import { surface } from './surface.js';
 import { TASKS, taskById } from './demo.js';
 import { retheme } from './diagram.js';
 import { openComposer } from './composer.js';
+import { openOkfBundle } from './okf-load.js';
 import { validateOverlay } from './overlay.js';
 import { initAuth, signIn, signOut, isSignedIn, userName, oauthAvailable, onAuthChange, generateOverlay } from './llm.js';
 
@@ -180,7 +181,9 @@ function boot() {
   });
   document.addEventListener('mosaic:reset', resetOverlay);
   document.getElementById('composer-open')?.addEventListener('click', openComposer);
+  document.getElementById('okf-open')?.addEventListener('click', openOkfBundle);
   document.getElementById('cmd-reset')?.addEventListener('click', resetOverlay);
+  document.addEventListener('mosaic:toast', e => toast(e.detail));
 
   // Prompt
   const form = document.getElementById('cmd-form');

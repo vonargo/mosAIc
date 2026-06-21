@@ -54,7 +54,7 @@ function cleanTessera(t) {
   const out = { type };
   if (typeof t.title === 'string') out.title = t.title;
   if (Number.isFinite(t.span)) out.span = t.span;
-  for (const k of ['body', 'lang', 'filename', 'tone', 'columns', 'rows', 'items']) {
+  for (const k of ['body', 'lang', 'filename', 'tone', 'columns', 'rows', 'items', 'okf']) {
     if (t[k] !== undefined) out[k] = t[k];
   }
   // an unknown type with no usable body → show its source so nothing is silently lost

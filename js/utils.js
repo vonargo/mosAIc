@@ -73,7 +73,7 @@ export function mdToHtml(md) {
     if (fence) { flushPara(); closeLists(); out.push(fences[+fence[1]]); i++; continue; }
 
     // heading
-    const h = line.match(/^(#{2,6})\s+(.+)$/);
+    const h = line.match(/^(#{1,6})\s+(.+)$/);
     if (h) { flushPara(); closeLists(); out.push(`<div class="md-h md-h${h[1].length}">${inline(h[2])}</div>`); i++; continue; }
 
     // rule
