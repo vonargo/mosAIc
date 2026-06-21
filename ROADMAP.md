@@ -49,6 +49,8 @@ It covers the crown jewels: the `base ⊕ overlay` merge (`effective`), `validat
 
 ## Bigger ideas / v2
 
+*The north star these point toward — MosAIc as an open render surface for LLM coauthoring — is in [VISION.md](VISION.md).*
+
 - **Provider-agnostic proxy** — an optional OpenAI-compatible endpoint setting so MosAIc isn't HF-only (the brief's original "thin provider-agnostic proxy").
 - **The plugin arc** — the brief's long game: a reconfigurable artifact layer a coding agent drives. The overlay schema is the seam; a host (IDE / agent) emits overlays over a transport instead of the in-browser model.
 - **Share / persist** — the surface is just a serializable overlay; a shareable URL (or save-to-HF-dataset for signed-in users) is small.
