@@ -38,3 +38,37 @@ export function effective(base) {
     views: remove.size ? views.filter(v => !remove.has(v.id)) : views,
   };
 }
+
+// Fold a new overlay (a patch the model emits against the *current* surface) into
+// the accumulated overlay, using the same shallow-merge-by-id rules as effective():
+// matching id → fields assigned (omit `tesserae` to keep the view's tiles), new id
+// → appended, `remove` → dropped from the accumulator and remembered (so a removed
+// *base* view stays dropped after the next merge over base). This is what lets the
+// mosaic *evolve* across successive tasks instead of being regenerated each time.
+// Pure: (accumulatedOverlay, patch) → accumulatedOverlay.
+export function composeOverlay(acc, patch) {
+  acc = acc || {}; patch = patch || {};
+  const views = (acc.views || []).map(v => ({ ...v }));
+  const byId = new Map(views.map(v => [v.id, v]));
+
+  for (const pv of patch.views || []) {
+    if (!pv || !pv.id) continue;
+    const cur = byId.get(pv.id);
+    if (cur) Object.assign(cur, pv);                                   // edit in place (omit tesserae = keep)
+    else { const nv = { ...pv }; views.push(nv); byId.set(nv.id, nv); } // new view → appended
+  }
+
+  let remove = [...(acc.remove || [])];
+  for (const id of patch.remove || []) {
+    const i = views.findIndex(v => v.id === id);
+    if (i >= 0) views.splice(i, 1);
+    if (!remove.includes(id)) remove.push(id);
+  }
+  remove = remove.filter(id => !views.some(v => v.id === id));         // a re-added view isn't "removed"
+
+  const out = { views };
+  const title = patch.title || acc.title;
+  if (title) out.title = title;
+  if (remove.length) out.remove = remove;
+  return out;
+}

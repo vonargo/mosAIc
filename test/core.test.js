@@ -10,7 +10,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { STATE, effective } from '../js/state.js';
+import { STATE, effective, composeOverlay } from '../js/state.js';
 import { validateOverlay } from '../js/overlay.js';
 import { mdInline } from '../js/utils.js';
 
@@ -44,6 +44,44 @@ test('effective: remove drops a view', () => {
   reset();
   STATE.overlay = { views: [{ id: 'x', title: 'X' }], remove: ['start'] };
   assert.deepEqual(effective(BASE).views.map(v => v.id), ['x']);
+});
+
+// ── composeOverlay(): the mosaic evolves (a patch folded into the accumulator) ─
+test('composeOverlay: a new view is appended to the accumulator', () => {
+  const next = composeOverlay({ views: [{ id: 'a', title: 'A' }] }, { views: [{ id: 'b', title: 'B' }] });
+  assert.deepEqual(next.views.map(v => v.id), ['a', 'b']);
+});
+
+test('composeOverlay: editing a view merges fields; omitted tesserae keeps its tiles', () => {
+  const acc = { views: [{ id: 'a', title: 'A', tesserae: [{ type: 'markdown', body: 'keep' }] }] };
+  const a = composeOverlay(acc, { views: [{ id: 'a', title: 'A2' }] }).views.find(v => v.id === 'a');
+  assert.equal(a.title, 'A2');
+  assert.deepEqual(a.tesserae, [{ type: 'markdown', body: 'keep' }]);   // preserved across the patch
+});
+
+test('composeOverlay: tesserae present replaces the tiles', () => {
+  const acc = { views: [{ id: 'a', tesserae: [{ type: 'markdown', body: 'old' }] }] };
+  const next = composeOverlay(acc, { views: [{ id: 'a', tesserae: [{ type: 'code', body: 'new' }] }] });
+  assert.deepEqual(next.views[0].tesserae, [{ type: 'code', body: 'new' }]);
+});
+
+test('composeOverlay: remove drops a built view and is remembered; re-adding clears it', () => {
+  const removed = composeOverlay({ views: [{ id: 'a' }, { id: 'b' }] }, { remove: ['a'] });
+  assert.deepEqual(removed.views.map(v => v.id), ['b']);
+  assert.deepEqual(removed.remove, ['a']);
+  const readded = composeOverlay(removed, { views: [{ id: 'a', title: 'A' }] });
+  assert.deepEqual(readded.views.map(v => v.id), ['b', 'a']);
+  assert.ok(!(readded.remove || []).includes('a'));
+});
+
+test('composeOverlay + effective: successive patches accumulate, removing a base view sticks', () => {
+  reset();
+  let ov = composeOverlay({}, { views: [{ id: 'spec', title: 'Spec' }] });
+  ov = composeOverlay(ov, { views: [{ id: 'rollout', title: 'Rollout' }] });
+  STATE.overlay = ov;
+  assert.deepEqual(effective(BASE).views.map(v => v.id), ['start', 'spec', 'rollout']);   // evolved, not reset
+  STATE.overlay = composeOverlay(ov, { remove: ['start'] });
+  assert.deepEqual(effective(BASE).views.map(v => v.id), ['spec', 'rollout']);             // base view dropped
 });
 
 // ── validateOverlay(): normalize + guard ────────────────────

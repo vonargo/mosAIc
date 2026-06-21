@@ -109,16 +109,22 @@ async function chat(client, messages, response_format) {
 }
 
 // task (string) -> validated overlay. Throws with a friendly message on failure.
-export async function generateOverlay(task) {
+export async function generateOverlay(task, current = null) {
   if (!isSignedIn()) throw new Error('Sign in with Hugging Face to type a task.');
   const { InferenceClient } = await infer();
   const client = new InferenceClient(auth.accessToken);
 
+  const hasCurrent = current && Array.isArray(current.views) && current.views.length > 0;
   const system = (await schema()) +
     `\n\nYou are MosAIc's overlay generator. Given a task, respond with ONLY a JSON overlay (no prose, no markdown fences) that reshapes the surface for that task: 1–3 views, each with a sensible layout and content-bearing tesserae.
 
-You have NO access to the user's files, repository, or any external or private data — only the text of their task. If the task refers to specific content you don't have (e.g. "this repo", "my code", "the error above") and it isn't included in the task text, do NOT invent details. Instead, build a surface that asks for it — a note explaining you need the content, plus a tessera showing what to paste — and it will reshape once they provide it. When you do have enough — a self-contained task, or content included inline — use specific, realistic content, never lorem-ipsum placeholders.`;
-  const base = [{ role: 'system', content: system }, ...fewShot(), { role: 'user', content: task }];
+You have NO access to the user's files, repository, or any external or private data — only the text of their task. If the task refers to specific content you don't have (e.g. "this repo", "my code", "the error above") and it isn't included in the task text, do NOT invent details. Instead, build a surface that asks for it — a note explaining you need the content, plus a tessera showing what to paste — and it will reshape once they provide it.
+
+When a "Current surface" is included below, the task may ask you to MODIFY or EXTEND it. Emit a patch, not a fresh surface: reuse a view's "id" to edit it (omit "tesserae" to keep that view's tiles, or include them to replace), add a new "id" to append a view, and "remove": ["id"] to drop one. Include only what changes. Start over with a brand-new surface only if the task is clearly unrelated to what's already there.
+
+When you do have enough — a self-contained task, or content included inline — use specific, realistic content, never lorem-ipsum placeholders.`;
+  const ask = hasCurrent ? `Current surface (JSON):\n${JSON.stringify(current)}\n\nTask: ${task}` : task;
+  const base = [{ role: 'system', content: system }, ...fewShot(), { role: 'user', content: ask }];
 
   // 1) guided JSON
   let content = await chat(client, base, { type: 'json_object' });
