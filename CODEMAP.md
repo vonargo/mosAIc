@@ -18,6 +18,8 @@ A **model** emits an **overlay** (signed in, the prompt sends a typed task to HF
 - `js/surface.js` — `BASE` (the default surface — the **Start Here** view: a pure explainer, content only) and `surface()` / `viewById(id)`, which read everything *post-merge* through `effective(BASE)`.
 - `js/tesserae.js` — `renderTessera(t, i)` + the `RENDERERS` map (markdown, code, table, diagram, note, tasks — content only) + `hydrate()` for interactive tiles (code-copy, tasks). **Add a tile type here: one function + one map entry.**
 - `js/overlay.js` — `validateOverlay(input)`: normalizes + guards an overlay (from the model or the Composer) before it reshapes the surface, so a bad emit degrades to a message instead of breaking the render path.
+- `js/okf.js` — **OKF mode** (pure, tested): parse a Google Open Knowledge Format bundle (markdown + YAML frontmatter), sort into docs/reserved/skipped, and `okfToOverlay()` → one view per concept `type`, one markdown tessera per doc, cross-links rewritten to in-app routes, `sourced/unsourced` provenance computed.
+- `js/okf-load.js` — the browser side: `openOkfBundle()` (folder picker) + `openOkfSample()` (the shipped `samples/` demo, no sign-in) → parse → `mosaic:apply`. `renderTessera` shows the provenance strip when a tessera carries `okf` metadata.
 - `js/llm.js` — the typed/model path: HF OAuth (`oauthLoginUrl` / `oauthHandleRedirectIfPresent`, viewer token) + Inference Providers (`InferenceClient.chatCompletion`), called from the browser so inference bills to the viewer. `generateOverlay(task, current)` uses `SCHEMA.md` as the system prompt and the `demo.js` overlays as few-shot, with guided JSON + a corrective retry; when a current surface is passed it instructs **patch-mode** (modify/extend the surface, not regenerate it). HF libs load lazily from a pinned CDN and fail soft.
 - `js/composer.js` — the **Composer**: a command-bar driver (not a tessera). Opens a drawer with the overlay JSON editor; Apply (validated) / Reset dispatch the same `mosaic:apply` / `mosaic:reset` events the prompt uses.
 - `js/demo.js` — `TASKS`: four canned overlays (Explain / Debug / Plan a feature / Plan a trip) that feed both the example suggestions and `generateOverlay`'s few-shot.
@@ -40,7 +42,7 @@ A **model** emits an **overlay** (signed in, the prompt sends a typed task to HF
 
 ## Known rough edges
 
-- `mdToHtml` list depth assumes 2-space indent; 4-space/tabs misbehave. Headings render as `.md-h` divs (h2–h6), not real heading tags.
+- `mdToHtml` list depth assumes 2-space indent; 4-space/tabs misbehave. Headings (h1–h6) render as `.md-h` divs, not real heading tags.
 - Diagram tiles need the Mermaid CDN to draw; offline they show their source text (by design — the app still runs).
 - The typed/model path needs the OAuth app the deployed Space provisions (`window.huggingface.variables`); running locally, `oauthAvailable()` is false, so sign-in/typed tasks are disabled — the examples and Composer still work.
 - The `router` ↔ `sidebar` import cycle is safe (both imported symbols are functions called only at runtime).

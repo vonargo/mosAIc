@@ -14,6 +14,7 @@ tags:
   - ui
   - coauthoring
   - agent
+  - okf
 hf_oauth: true
 hf_oauth_scopes:
   - inference-api
@@ -53,6 +54,12 @@ The mechanism is **base + overlay**. A base surface plus an overlay a model emit
 
 A **surface** holds **views**; a view lays out **tesserae** — the typed content tiles a mosaic is made of (markdown, code, table, diagram, note, tasks). Controls (the prompt, examples, Composer, theme, sidebar toggle) live in the command bar — chrome the surface can't reshape away. The overlay contract is small and documented in **[SCHEMA.md](SCHEMA.md)** — that's the core IP, the target a model writes to.
 
+## Open a knowledge base (OKF)
+
+MosAIc also reads **[Open Knowledge Format](https://github.com/GoogleCloudPlatform/knowledge-catalog/tree/main/okf)** — Google Cloud's portable "LLM-wiki" spec: a folder of markdown files with YAML frontmatter. Click **▣ OKF** in the command bar to open a bundle (a folder), or pick **"Open a sample OKF bundle"** from the examples — no sign-in.
+
+Where the reference viewer draws a force-directed graph, MosAIc renders an OKF bundle as a **calm reading surface**: one view per concept `type`, each concept a card, cross-links that navigate in place, and — because OKF's frontmatter has no trust field — a **provenance strip** that surfaces what each concept *does* carry (a source link, a freshness date, citations) and flags what it doesn't (`sourced` vs `unsourced`). The parser + adapter are pure and tested (`js/okf.js`); build notes in [OKF-VIEWER-BRIEF.md](OKF-VIEWER-BRIEF.md).
+
 ## Shape
 
 - `index.html` + `style.css` — the shell, command bar, and aesthetic (Syne + IBM Plex)
@@ -62,6 +69,7 @@ A **surface** holds **views**; a view lays out **tesserae** — the typed conten
 - `js/composer.js` — the Composer drawer (a command-bar driver)
 - `js/llm.js` — the typed/model path: HF OAuth (viewer token) + Inference Providers
 - `js/overlay.js` — validates a model/Composer overlay before it's applied
+- `js/okf.js` + `js/okf-load.js` — open a Google **OKF** knowledge bundle and render it as a reading surface
 - `js/view.js`, `js/router.js`, `js/sidebar.js` — the render path
 - `js/diagram.js` — diagram tiles via Mermaid (loaded lazily, degrades to source text offline)
 
