@@ -11,7 +11,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { STATE, effective, composeOverlay } from '../js/state.js';
-import { validateOverlay } from '../js/overlay.js';
+import { validateOverlay, stripProvenance } from '../js/overlay.js';
 import { mdInline } from '../js/utils.js';
 
 const BASE = {
@@ -106,6 +106,34 @@ test('validateOverlay: omits tesserae when absent (so the merge can keep base ti
 test('validateOverlay: an unknown tile type degrades to markdown', () => {
   const v = validateOverlay({ views: [{ id: 'a', tesserae: [{ type: 'frobnicate', body: 'x' }] }] });
   assert.equal(v.overlay.views[0].tesserae[0].type, 'markdown');
+});
+
+// ── stripProvenance(): the host owns provenance, the model may not mint it ──────
+// The model is shown the current surface (which carries host-computed okf badges), so
+// a generated tile can mirror a `sourced` badge onto its own content. We strip okf from
+// model output before it merges — the model proposes content; only the host stamps trust.
+test('stripProvenance: drops a model-supplied okf block, leaves content intact', () => {
+  const patch = { views: [{ id: 'a', tesserae: [{ type: 'markdown', body: 'x', okf: { sourced: true, resource: 'https://evil.example/fake' } }] }] };
+  stripProvenance(patch);
+  assert.equal('okf' in patch.views[0].tesserae[0], false);
+  assert.equal(patch.views[0].tesserae[0].body, 'x');
+});
+
+test('stripProvenance + composeOverlay: a model patch cannot mint provenance; host okf survives', () => {
+  const host = { views: [{ id: 'concepts', tesserae: [{ type: 'markdown', title: 'Orders', body: '…', okf: { sourced: true } }] }] };
+  const modelPatch = { views: [{ id: 'summary', tesserae: [{ type: 'markdown', body: 'a generated summary', okf: { sourced: true } }] }] };
+  const next = composeOverlay(host, stripProvenance(modelPatch));
+  assert.equal('okf' in next.views.find(v => v.id === 'summary').tesserae[0], false);   // model badge stripped
+  assert.equal(next.views.find(v => v.id === 'concepts').tesserae[0].okf.sourced, true); // host badge preserved
+});
+
+// Guard: the host OKF overlay ALSO flows through validateOverlay (applyOkf →
+// mosaic:apply), so okf must survive cleanTessera or real host badges break. The model
+// path is sanitized upstream by stripProvenance instead — do NOT "fix" this by dropping
+// okf from cleanTessera's preserved keys; that strips host provenance too.
+test('validateOverlay: preserves host-computed okf (why okf must stay in cleanTessera)', () => {
+  const v = validateOverlay({ views: [{ id: 'c', tesserae: [{ type: 'markdown', body: 'x', okf: { sourced: true } }] }] });
+  assert.equal(v.overlay.views[0].tesserae[0].okf.sourced, true);
 });
 
 // ── mdInline(): link sanitizer (the javascript: XSS regression) ─

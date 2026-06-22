@@ -15,7 +15,7 @@ import { TASKS, taskById } from './demo.js';
 import { retheme } from './diagram.js';
 import { openComposer } from './composer.js';
 import { openOkfBundle, openOkfSample, okfSearch } from './okf-load.js';
-import { validateOverlay } from './overlay.js';
+import { validateOverlay, stripProvenance } from './overlay.js';
 import { initAuth, signIn, signOut, isSignedIn, userName, oauthAvailable, onAuthChange, generateOverlay } from './llm.js';
 
 const PENDING_KEY = 'mosaic-pending';   // a typed task stashed across the sign-in redirect
@@ -71,7 +71,7 @@ async function runTask(task) {
   hideSuggest();
   form?.classList.add('thinking'); input.disabled = true; if (spinner) spinner.hidden = false;
   try {
-    const patch = await generateOverlay(task, STATE.overlay);    // model patches the *current* surface
+    const patch = stripProvenance(await generateOverlay(task, STATE.overlay));   // model patches the *current* surface; strip any provenance it minted (host-owned)
     const overlay = composeOverlay(STATE.overlay, patch);        // fold it in so the mosaic evolves, not resets
     document.dispatchEvent(new CustomEvent('mosaic:apply', { detail: { overlay, label: clip(task) } }));
     input.value = '';

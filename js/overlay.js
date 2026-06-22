@@ -47,6 +47,23 @@ export function validateOverlay(input) {
   return { ok: true, overlay };
 }
 
+// Provenance (`okf`) is host-owned: only the OKF loader (okfToOverlay) may stamp a
+// tile's sourced/unsourced badge. A model patch is untrusted — and because the model
+// is shown the current surface (which carries those host badges), a generated tile can
+// mirror a `sourced` badge onto its own content. Strip `okf` from model output before
+// it merges, so the model proposes content and only the host stamps provenance. Applied
+// to the model's patch upstream of composeOverlay, where it's still separable from the
+// host badges already in STATE.overlay. Mutates + returns (the patch is freshly parsed).
+export function stripProvenance(overlay) {
+  if (!overlay || typeof overlay !== 'object') return overlay;
+  for (const v of overlay.views || []) {
+    for (const t of (v && v.tesserae) || []) {
+      if (t && typeof t === 'object') delete t.okf;
+    }
+  }
+  return overlay;
+}
+
 function cleanTessera(t) {
   if (!t || typeof t !== 'object' || typeof t.type !== 'string') return null;
   const known = TYPES.has(t.type);
