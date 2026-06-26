@@ -66,9 +66,10 @@ const RENDERERS = {
   },
 };
 
-// Provenance strip for OKF concepts (the trust layer OKF's frontmatter lacks).
-// Rides on any tessera carrying `okf` metadata; absent otherwise. Renders a
-// sourced/unsourced badge, a sanitized source link, a freshness date, and tags.
+// Provenance strip for OKF concepts — a PRESENCE check, not verification: it surfaces whether a
+// concept carries a source link / citations (`sourced`) vs not (`unsourced`). "sourced" means a
+// citation is present, NOT that the claim is true (a concept can cite anywhere and show sourced).
+// Rides on any tessera carrying `okf` metadata; renders the badge, a sanitized link, a date, tags.
 const okfDate = (ts) => String(ts || '').slice(0, 10);
 function okfMeta(okf) {
   if (!okf) return '';

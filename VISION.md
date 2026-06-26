@@ -10,7 +10,7 @@ LLM interfaces are still a **scroll** — a transcript where the actual artifact
 
 The whole surface is driven by one small, validated contract — the **overlay schema**. That's the seam, and it's the point: it decouples *who decides the layout* from *what renders it*. Today an in-browser model emits overlays; the same contract can be driven later by a coding agent, an IDE, a backend, or a swarm of agents, over any transport.
 
-So MosAIc is less "AI that builds a page" and more **a render target for LLM output** — what HTML is to a browser, the overlay is to MosAIc. Features commoditize; an open, minimal, forkable *protocol* for LLM-built surfaces is the part worth owning.
+So MosAIc is less "AI that builds a page" and more **a render target for LLM output**. The bet: an open, minimal, forkable *protocol* for LLM-built surfaces is worth more than any one feature — and the overlay schema *could become* to LLM output what HTML is to a browser. That's the aspiration, not the status: today it's one in-browser emitter and one renderer.
 
 ## Honest positioning
 
