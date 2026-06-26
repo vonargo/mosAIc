@@ -21,7 +21,7 @@ function applyOkf(files) {
   _docs = docs;
   const tail = skipped.length ? ` · ${skipped.length} skipped` : '';
   document.dispatchEvent(new CustomEvent('mosaic:apply', {
-    detail: { overlay: okfToOverlay(docs), label: `OKF · ${docs.length} concept${docs.length === 1 ? '' : 's'}${tail}` },
+    detail: { overlay: okfToOverlay(docs), label: `OKF · ${docs.length} concept${docs.length === 1 ? '' : 's'}${tail}`, trusted: true },   // host-authored bundle → keep its provenance
   }));
 }
 
@@ -32,7 +32,7 @@ export function okfSearch(query) {
   const hits = okfFilter(_docs, query);
   if (!hits.length) { toast('No concepts match — clear the filter to see all.'); return; }
   document.dispatchEvent(new CustomEvent('mosaic:apply', {
-    detail: { overlay: okfToOverlay(hits), label: `OKF · ${hits.length} of ${_docs.length}` },
+    detail: { overlay: okfToOverlay(hits), label: `OKF · ${hits.length} of ${_docs.length}`, trusted: true },   // host-authored bundle → keep its provenance
   }));
 }
 

@@ -11,7 +11,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { STATE, effective, composeOverlay } from '../js/state.js';
-import { validateOverlay, stripProvenance } from '../js/overlay.js';
+import { validateOverlay, stripProvenance, composePatch } from '../js/overlay.js';
 import { mdInline } from '../js/utils.js';
 
 const BASE = {
@@ -148,4 +148,31 @@ test('mdInline: in-app # links stay in the same tab (no target=_blank)', () => {
   const a = mdInline('[Customers](#bigquery-table)');
   assert.match(a, /href="#bigquery-table"/);
   assert.doesNotMatch(a, /target=/);
+});
+
+// ── composePatch — the single apply boundary (strip-unless-trusted, compose-unless-replace) ──
+const okfTile = () => ({ views: [{ id: 'a', tesserae: [{ type: 'note', body: 'x', okf: { sourced: true } }] }] });
+
+test('composePatch: an UNTRUSTED overlay (model / Composer) is stripped of okf', () => {
+  const out = composePatch({ views: [] }, okfTile(), { trusted: false });
+  assert.equal(out.views[0].tesserae[0].okf, undefined);   // the badge can't be self-minted
+});
+
+test('composePatch: a TRUSTED overlay (the OKF loader) keeps its okf', () => {
+  const out = composePatch({ views: [] }, okfTile(), { trusted: true });
+  assert.deepEqual(out.views[0].tesserae[0].okf, { sourced: true });
+});
+
+test('composePatch: a second untrusted patch COMPOSES onto the surface (does not replace)', () => {
+  const base = { views: [{ id: 'a', tesserae: [{ type: 'note', body: 'a0' }] }] };
+  const patch = { views: [{ id: 'b', tesserae: [{ type: 'note', body: 'b0' }] }] };
+  const out = composePatch(base, patch, {});                // untrusted, default (compose)
+  assert.deepEqual(out.views.map(v => v.id), ['a', 'b']);   // base view survives, new one appended
+});
+
+test('composePatch: replace:true swaps the surface wholesale', () => {
+  const base = { views: [{ id: 'a', tesserae: [] }] };
+  const patch = { views: [{ id: 'b', tesserae: [] }] };
+  const out = composePatch(base, patch, { replace: true });
+  assert.deepEqual(out.views.map(v => v.id), ['b']);        // base dropped
 });

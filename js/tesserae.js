@@ -23,17 +23,26 @@ const RENDERERS = {
   },
 
   table(t) {
+    // A table can arrive as structured top-level `columns`/`rows`, as `data:{headers|columns, rows}`,
+    // or as a markdown table in `body`. Accept all three; fall back to the markdown renderer.
+    const d = (t.data && typeof t.data === 'object') ? t.data : {};
+    const cols = Array.isArray(t.columns) ? t.columns : (Array.isArray(d.headers) ? d.headers : (Array.isArray(d.columns) ? d.columns : []));
+    const rs = Array.isArray(t.rows) ? t.rows : (Array.isArray(d.rows) ? d.rows : []);
+    if (!cols.length && !rs.length) return `<div class="md">${mdToHtml(t.body || '')}</div>`;
     const cell = c => mdInline(escapeHtml(String(c ?? '')));
-    const head = (t.columns || []).map(h => `<th>${cell(h)}</th>`).join('');
-    const rows = (t.rows || []).map(r =>
+    const head = cols.map(h => `<th>${cell(h)}</th>`).join('');
+    const rows = rs.map(r =>
       `<tr>${(r || []).map(c => `<td>${cell(c)}</td>`).join('')}</tr>`).join('');
     return `<table class="md-table"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
   },
 
   // Mermaid renders these in-place (see diagram.js). The raw source is kept as
-  // textContent so it degrades to readable text if the CDN is unreachable.
+  // textContent so it degrades to readable text if the CDN is unreachable. Strip a
+  // ```mermaid fence if the body arrives wrapped, so mermaid parses the source not the wrapper.
   diagram(t) {
-    return `<div class="mermaid">${escapeHtml(t.body || '')}</div>`;
+    let src = String(t.body || (t.data && t.data.diagram) || '').trim();
+    src = src.replace(/^```+\s*mermaid\s*/i, '').replace(/^```+\s*/, '').replace(/```+\s*$/, '').trim();
+    return `<div class="mermaid">${escapeHtml(src)}</div>`;
   },
 
   note(t) {
@@ -42,10 +51,16 @@ const RENDERERS = {
   },
 
   tasks(t) {
-    const items = (t.items || []).map((it, i) => {
-      const done = it && it.done ? ' done' : '';
-      return `<li class="task-item${done}" data-i="${i}" role="checkbox" tabindex="0" aria-checked="${!!(it && it.done)}">` +
-        `<span class="task-box"></span><span class="task-text">${mdInline(escapeHtml(String(it && it.text || '')))}</span></li>`;
+    // Items may be objects ({text|label|task, done|completed}) OR plain strings; fall back to body.
+    const src = Array.isArray(t.items) ? t.items : (Array.isArray(t.data && t.data.items) ? t.data.items : []);
+    if (!src.length && t.body) return `<div class="md">${mdToHtml(t.body)}</div>`;
+    const items = src.map((it, i) => {
+      const isStr = typeof it === 'string';
+      const text = isStr ? it : String((it && (it.text ?? it.label ?? it.task)) || '');
+      const checked = !isStr && !!(it && (it.done || it.completed));
+      const done = checked ? ' done' : '';
+      return `<li class="task-item${done}" data-i="${i}" role="checkbox" tabindex="0" aria-checked="${checked}">` +
+        `<span class="task-box"></span><span class="task-text">${mdInline(escapeHtml(text))}</span></li>`;
     }).join('');
     return `<ul class="tasks">${items}</ul>`;
   },
@@ -72,9 +87,11 @@ export function renderTessera(t, i = 0) {
   const type = t && RENDERERS[t.type] ? t.type : 'markdown';
   const fn = RENDERERS[type];
   const span = t.span > 1 ? t.span : 1;
-  const head = t.title
-    ? `<div class="tessera-head"><span class="tessera-title">${escapeHtml(t.title)}</span><span class="tessera-tag">${escapeHtml(type)}</span></div>`
-    : '';
+  // Untitled tiles fall back to their TYPE as the label, so a composed table/diagram/code is
+  // always identifiable; titled tiles keep their title (+ the type tag).
+  const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+  const titleText = t.title && t.title.trim() ? t.title : typeLabel;
+  const head = `<div class="tessera-head"><span class="tessera-title">${escapeHtml(titleText)}</span><span class="tessera-tag">${escapeHtml(type)}</span></div>`;
   const sub = t.okf && t.okf.description
     ? `<div class="tessera-sub">${escapeHtml(t.okf.description)}</div>` : '';
   return `<section class="tessera t-${type}" style="--span:${span};--i:${i}">${head}${sub}` +

@@ -9,13 +9,13 @@
 
 import { renderNav } from './sidebar.js';
 import { handleHash, navigate } from './router.js';
-import { STATE, composeOverlay } from './state.js';
+import { STATE } from './state.js';
 import { surface } from './surface.js';
 import { TASKS, taskById } from './demo.js';
 import { retheme } from './diagram.js';
 import { openComposer } from './composer.js';
 import { openOkfBundle, openOkfSample, okfSearch } from './okf-load.js';
-import { validateOverlay, stripProvenance } from './overlay.js';
+import { validateOverlay, composePatch } from './overlay.js';
 import { initAuth, signIn, signOut, isSignedIn, userName, oauthAvailable, onAuthChange, generateOverlay } from './llm.js';
 
 const PENDING_KEY = 'mosaic-pending';   // a typed task stashed across the sign-in redirect
@@ -71,9 +71,8 @@ async function runTask(task) {
   hideSuggest();
   form?.classList.add('thinking'); input.disabled = true; if (spinner) spinner.hidden = false;
   try {
-    const patch = stripProvenance(await generateOverlay(task, STATE.overlay));   // model patches the *current* surface; strip any provenance it minted (host-owned)
-    const overlay = composeOverlay(STATE.overlay, patch);        // fold it in so the mosaic evolves, not resets
-    document.dispatchEvent(new CustomEvent('mosaic:apply', { detail: { overlay, label: clip(task) } }));
+    const patch = await generateOverlay(task, STATE.overlay);   // model patches the *current* surface
+    document.dispatchEvent(new CustomEvent('mosaic:apply', { detail: { overlay: patch, label: clip(task) } }));   // the listener strips (untrusted) + composes — one boundary
     input.value = '';
   } catch (e) {
     toast(e?.message || 'Could not generate an overlay.');
@@ -115,19 +114,21 @@ function syncOkfSearch(show) {
   if (!show) el.value = '';
 }
 
-function applyOverlay(overlay, { task = null, label = null } = {}) {
+function applyOverlay(overlay, { task = null, label = null, target = null } = {}) {
   STATE.overlay = overlay || {};
   STATE.task = task;
   persistSurface();
   syncOkfSearch((overlay?.views || []).some(v => (v.tesserae || []).some(t => t && t.okf)));
 
+  // Navigate to the explicit `target` (the NEW view a patch introduced — the listener passes the
+  // patch's first view, since the *composed* surface's first view is a stale base panel). Direct
+  // callers (the demo tasks) fall back to the overlay's first view, then the current route.
   const views = surface().views;
-  const target =
-    overlay?.views?.[0]?.id ||
+  const tgt = target || overlay?.views?.[0]?.id ||
     (views.find(v => v.id === STATE.route) ? STATE.route : views[0]?.id);
 
   flashReshape();
-  route(target);
+  route(tgt);
   if (label) toast(`Reconfigured · ${label}`);
 }
 
@@ -187,12 +188,17 @@ function boot() {
   handleHash();
   window.addEventListener('hashchange', handleHash);
 
-  // Apply path — both the Composer and the model dispatch mosaic:apply. Validate
-  // defensively here so any bad overlay degrades to a toast, never a broken surface.
+  // Apply path — the model, the Composer, and the OKF loader all dispatch mosaic:apply. This is
+  // the ONE boundary: validate → strip provenance unless trusted → compose (unless replace).
   document.addEventListener('mosaic:apply', e => {
-    const v = validateOverlay(e.detail?.overlay);
+    const { overlay: raw, label, trusted = false, replace = false } = e.detail || {};
+    const v = validateOverlay(raw);
     if (!v.ok) { toast('Invalid overlay — ' + v.error); return; }
-    applyOverlay(v.overlay, { label: e.detail.label || 'Custom overlay' });
+    // The single apply boundary: strip provenance unless trusted, then compose unless replace
+    // (composePatch — pure + tested in core.test.js). Navigate to the patch's own first view
+    // (strip preserves ids), not the composed surface's stale base view.
+    const next = composePatch(STATE.overlay, v.overlay, { trusted, replace });
+    applyOverlay(next, { label: label || 'Custom overlay', target: v.overlay.views?.[0]?.id });
   });
   document.addEventListener('mosaic:reset', resetOverlay);
   document.getElementById('composer-open')?.addEventListener('click', openComposer);

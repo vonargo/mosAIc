@@ -3,6 +3,8 @@
 // instead of breaking the render path. Lenient where the renderers are already
 // defensive; strict on the structural shape: views[] of { id, tesserae[] }.
 
+import { composeOverlay } from './state.js';
+
 const LAYOUTS = new Set(['stack', 'grid', 'split']);
 const TYPES = new Set(['markdown', 'code', 'table', 'diagram', 'note', 'tasks']);
 
@@ -77,4 +79,13 @@ function cleanTessera(t) {
   // an unknown type with no usable body → show its source so nothing is silently lost
   if (!known && out.body === undefined) out.body = '```json\n' + JSON.stringify(t, null, 2) + '\n```';
   return out;
+}
+
+// The apply boundary (post-validate), as a pure function so it's testable without the DOM.
+// Host owns provenance: an UNTRUSTED overlay (the model AND the hand-typed Composer) is stripped
+// of `okf` here — only a trusted source (the OKF loader) keeps it, so no dispatch path can mint a
+// `sourced` badge. Then it COMPOSES onto the running surface (the mosaic evolves) unless `replace`.
+export function composePatch(base, validated, { trusted = false, replace = false } = {}) {
+  const patch = trusted ? validated : stripProvenance(validated);
+  return replace ? patch : composeOverlay(base, patch);
 }
