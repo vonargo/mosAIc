@@ -54,7 +54,7 @@ export const TASKS = [
           id: 'keyfile',
           title: 'Key file',
           heading: 'resize.py',
-          subtitle: 'the core loop',
+          subtitle: 'imgcli — the core resize loop',
           layout: 'split',
           tesserae: [
             {
@@ -141,7 +141,7 @@ IndexError: list index out of range`,
           id: 'fix',
           title: 'Fix',
           heading: 'The fix',
-          subtitle: 'guard the split',
+          subtitle: 'guard the batch split — the IndexError fix',
           layout: 'stack',
           tesserae: [
             {
@@ -219,7 +219,7 @@ IndexError: list index out of range`,
           id: 'rollout',
           title: 'Rollout',
           heading: 'Rollout',
-          subtitle: 'ship it safely',
+          subtitle: 'shipping the WebP flag safely',
           layout: 'stack',
           tesserae: [
             {

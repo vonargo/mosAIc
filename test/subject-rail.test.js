@@ -3,6 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { tokens, overlapScore, candidateIndex, rankBySubject, applyRerank, railHtml, railRowHtml, RAIL_K } from '../js/subject-rail.js';
+import { TASKS } from '../js/demo.js';
 
 const VIEWS = [
   { id: 'oauth', title: 'OAuth flow', heading: 'OAuth 2.0 flow', tesserae: [{ type: 'markdown', title: 'Token exchange', body: 'x' }] },
@@ -56,6 +57,15 @@ test('applyRerank: rescore-only — unknown refs ignored, no rows added/removed,
   assert.equal(out[0].score, 1);
   assert.equal(out[1].score, 0.1);
   assert.ok(!out.some(r => r.ref === 'ghost'));
+});
+
+test('the demo showcase lights the rail: every multi-view example ranks ≥1 related row for its first view', () => {
+  for (const task of TASKS) {
+    const views = task.overlay.views || [];
+    if (views.length < 2) continue;
+    const { ranked } = rankBySubject(views[0], views);
+    assert.ok(ranked.length >= 1, `example "${task.id}" leaves the rail dark`);
+  }
 });
 
 test('railHtml: caps at RAIL_K with a ＋N more toggle; escapes hostile titles; empty → hidden', () => {

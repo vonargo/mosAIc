@@ -56,6 +56,14 @@ The mechanism is **base + overlay**. A base surface plus an overlay a model emit
 
 A **surface** holds **views**; a view lays out **tesserae** — the typed content tiles a mosaic is made of (markdown, code, table, diagram, note, tasks). Controls (the prompt, examples, Composer, theme, sidebar toggle) live in the command bar — chrome the surface can't reshape away. The overlay contract is small and documented in **[SCHEMA.md](SCHEMA.md)** — the target a model writes to.
 
+## 2.0 — the subject surface
+
+The sidebar now carries a **subject rail**: for whatever view you're on, everything else on the surface — other views and any loaded OKF concepts — is listed **ranked by relatedness, strongest on top**, each row a click-through with a strength bar. It's the mind map, realized as a list. The ranking is computed **in your browser** by term overlap (instant, zero tokens, works signed-out); the rail shows which scorer ranked it.
+
+Signed in, a **✦ rerank** button asks the model to re-score the same rows — one small call, and nothing is sent until you click. Rerank sends the current view's title and each candidate's title plus a ≤200-character snippet to the model on your Hugging Face account — the same data flow as typing a task. The model can only *re-score* the rows the rail already computed; it can never add, remove, or retitle one.
+
+The tiles got hands, too: **drag a tile** to rearrange a view, **drag a tile's corner** to resize it across columns (a click on the corner toggles wide/narrow) — both persist across reloads — and views with four or more tiles get a **pinned table of contents** that scrolls to a tile on click.
+
 ## Open a knowledge base (OKF)
 
 MosAIc also reads **[Open Knowledge Format](https://github.com/GoogleCloudPlatform/knowledge-catalog/tree/main/okf)** — Google Cloud's portable "LLM-wiki" spec: a folder of markdown files with YAML frontmatter. Click **▣ OKF** in the command bar to open a bundle (a folder), or pick **"Open a sample OKF bundle"** from the examples — no sign-in. (Opening your own folder uses the directory picker, which Safari doesn't support — use Chrome or Firefox, or the sample bundle.)
