@@ -17,6 +17,7 @@ import { openComposer } from './composer.js';
 import { openOkfBundle, openOkfSample, okfSearch } from './okf-load.js';
 import { validateOverlay, composePatch } from './overlay.js';
 import { initAuth, signIn, signOut, isSignedIn, userName, oauthAvailable, onAuthChange, generateOverlay } from './llm.js';
+import { initSubjectRail } from './subject-rail-boot.js';
 
 const PENDING_KEY = 'mosaic-pending';   // a typed task stashed across the sign-in redirect
 
@@ -187,6 +188,7 @@ function boot() {
   renderNav();
   handleHash();
   window.addEventListener('hashchange', handleHash);
+  initSubjectRail();   // the subject rail — related views/concepts, ranked, under the nav
 
   // Apply path — the model, the Composer, and the OKF loader all dispatch mosaic:apply. This is
   // the ONE boundary: validate → strip provenance unless trusted → compose (unless replace).
