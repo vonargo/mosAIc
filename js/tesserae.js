@@ -7,6 +7,7 @@
 // the HTML lands. Tesserae are content only — controls live in the command bar.
 
 import { escapeHtml, mdToHtml, mdInline } from './utils.js';
+import { resolveSpan } from './resize.js';
 
 const RENDERERS = {
   markdown(t) {
@@ -87,7 +88,7 @@ function okfMeta(okf) {
 export function renderTessera(t, i = 0) {
   const type = t && RENDERERS[t.type] ? t.type : 'markdown';
   const fn = RENDERERS[type];
-  const span = t.span > 1 ? t.span : 1;
+  const span = resolveSpan(t);
   // Untitled tiles fall back to their TYPE as the label, so a composed table/diagram/code is
   // always identifiable; titled tiles keep their title (+ the type tag).
   const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
@@ -96,7 +97,8 @@ export function renderTessera(t, i = 0) {
   const sub = t.okf && t.okf.description
     ? `<div class="tessera-sub">${escapeHtml(t.okf.description)}</div>` : '';
   return `<section class="tessera t-${type}" style="--span:${span};--i:${i}">${head}${sub}` +
-    `<div class="tessera-body">${fn(t)}</div>${okfMeta(t.okf)}</section>`;
+    `<div class="tessera-body">${fn(t)}</div>${okfMeta(t.okf)}` +
+    `<span class="tessera-resize" aria-hidden="true"></span></section>`;
 }
 
 // Wire interactive tiles. Idempotent per element via a data flag.

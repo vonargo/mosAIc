@@ -191,6 +191,7 @@ html, body {
 .tessera {
   background: var(--panel); border: 1px solid var(--line);
   border-radius: var(--radius); overflow: hidden;
+  position: relative;   /* anchors the corner resize handle */
   animation: tIn .34s cubic-bezier(.2, .7, .3, 1) both;
   animation-delay: calc(var(--i, 0) * 36ms);
 }
@@ -396,3 +397,9 @@ pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
   .composer-scrim, .composer-panel { transition: none !important; }
   .toast { transition: opacity .2s ease; }
 }
+
+/* ── tile resize — drag the corner to change span; click toggles 1↔2 ── */
+.tessera-resize { position:absolute; right:3px; bottom:3px; width:14px; height:14px; cursor:nwse-resize; opacity:0; border-right:2px solid var(--ink-faint); border-bottom:2px solid var(--ink-faint); border-radius:0 0 5px 0; transition:opacity .15s; touch-action:none; }
+.tessera:hover .tessera-resize { opacity:.55; }
+.tessera.resizing { outline:1.5px dashed var(--accent); outline-offset:2px; }
+.layout-stack .tessera-resize { display:none; }   /* span is a no-op in one column */

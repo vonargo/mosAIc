@@ -4,6 +4,7 @@
 import { escapeHtml } from './utils.js';
 import { renderTessera, hydrate } from './tesserae.js';
 import { renderMermaid } from './diagram.js';
+import { enableResize } from './resize.js';
 
 const LAYOUTS = new Set(['stack', 'grid', 'split']);
 
@@ -20,5 +21,6 @@ export function renderView(view, mount) {
     `</div>`;
 
   hydrate(mount);
+  enableResize(mount, view);   // drag a tile's corner to change its span (persists via reshape deltas)
   renderMermaid(mount);   // async; fills in when (and if) the lib loads
 }
