@@ -4,6 +4,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { STATE, effective, recordReshape, reshapesFor, clearReshapes } from '../js/state.js';
+import { validateOverlay } from '../js/overlay.js';
+import { renderTessera } from '../js/tesserae.js';
 
 const BASE = { title: 'T', views: [{ id: 'v1', title: 'One', tesserae: [{ type: 'markdown', body: 'a' }, { type: 'table', columns: ['c'], rows: [['x']] }] }] };
 
@@ -17,6 +19,16 @@ test('recordReshape stores per view+tile; reshapesFor reads it back', () => {
   recordReshape('v1', 1.5, { span: 2 });
   assert.deepEqual(reshapesFor(''), {});
   clearReshapes();
+});
+
+test('collapse: the fold state survives validate (drag re-dispatch) and renders folded', () => {
+  const v = validateOverlay({ views: [{ id: 'v', title: 'V', tesserae: [{ type: 'markdown', body: 'x', collapsed: true }] }] });
+  assert.ok(v.ok);
+  assert.equal(v.overlay.views[0].tesserae[0].collapsed, true);        // whitelist keeps it
+  const html = renderTessera({ type: 'markdown', body: 'x', collapsed: true });
+  assert.match(html, /class="tessera t-markdown collapsed"/);          // renders folded
+  assert.match(html, /t-fold/);                                        // the fold affordance is present
+  assert.match(renderTessera({ type: 'markdown', body: 'x' }), /aria-expanded="true"/);
 });
 
 test('effective() re-applies reshape deltas without mutating base', () => {

@@ -6,6 +6,7 @@ import { renderTessera, hydrate } from './tesserae.js';
 import { renderMermaid } from './diagram.js';
 import { enableResize } from './resize.js';
 import { enableDrag } from './drag.js';
+import { recordReshape } from './state.js';
 
 const LAYOUTS = new Set(['stack', 'grid', 'split']);
 
@@ -42,6 +43,20 @@ export function renderView(view, mount) {
   }));
 
   hydrate(mount);
+
+  // Collapse — fold a tile to its title bar; persists via the same reshape deltas as resize.
+  mount.querySelectorAll('.tessera').forEach((tile, i) => {
+    const fold = tile.querySelector('.t-fold');
+    if (!fold) return;
+    fold.addEventListener('click', () => {
+      const on = tile.classList.toggle('collapsed');
+      fold.textContent = on ? '▸' : '▾';
+      fold.title = on ? 'Expand' : 'Collapse';
+      fold.setAttribute('aria-expanded', on ? 'false' : 'true');
+      recordReshape(view.id, i, { collapsed: on });
+    });
+  });
+
   enableDrag(mount, view);     // drag a tile to rearrange → a trusted overlay patch
   enableResize(mount, view);   // drag a tile's corner to change its span (persists via reshape deltas)
   renderMermaid(mount);   // async; fills in when (and if) the lib loads

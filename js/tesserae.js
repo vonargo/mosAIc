@@ -89,14 +89,18 @@ export function renderTessera(t, i = 0) {
   const type = t && RENDERERS[t.type] ? t.type : 'markdown';
   const fn = RENDERERS[type];
   const span = resolveSpan(t);
+  const collapsed = !!(t && t.collapsed);
   // Untitled tiles fall back to their TYPE as the label, so a composed table/diagram/code is
   // always identifiable; titled tiles keep their title (+ the type tag).
   const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
   const titleText = t.title && t.title.trim() ? t.title : typeLabel;
-  const head = `<div class="tessera-head"><span class="tessera-title">${escapeHtml(titleText)}</span><span class="tessera-tag">${escapeHtml(type)}</span></div>`;
+  const head = `<div class="tessera-head"><span class="tessera-title">${escapeHtml(titleText)}</span>` +
+    `<span class="tessera-tag">${escapeHtml(type)}</span>` +
+    `<button class="t-fold" type="button" aria-expanded="${collapsed ? 'false' : 'true'}" ` +
+    `title="${collapsed ? 'Expand' : 'Collapse'}">${collapsed ? '▸' : '▾'}</button></div>`;
   const sub = t.okf && t.okf.description
     ? `<div class="tessera-sub">${escapeHtml(t.okf.description)}</div>` : '';
-  return `<section class="tessera t-${type}" style="--span:${span};--i:${i}">${head}${sub}` +
+  return `<section class="tessera t-${type}${collapsed ? ' collapsed' : ''}" style="--span:${span};--i:${i}">${head}${sub}` +
     `<div class="tessera-body">${fn(t)}</div>${okfMeta(t.okf)}` +
     `<span class="tessera-resize" aria-hidden="true"></span></section>`;
 }

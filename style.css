@@ -1,20 +1,25 @@
 /* MosAIc — base aesthetic. Calm, lean, hairline-driven. Theme via the vars below. */
 
+/* Palette "smalti & stone" — drawn from the mosaic's own materials: a warm stone ground,
+   deep verdigris glass (the accent), and one touch of gold leaf (--gilt, spent on the
+   logo's single gilded tessera). Display face: Marcellus — Roman inscriptional letterforms,
+   the lettering carved beside the floors these surfaces are named for. */
 :root {
-  --bg:        #fbfbfa;
-  --panel:     #ffffff;
-  --ink:       #1d1d1f;
-  --ink-soft:  #555;
-  --ink-faint: #8a8a8a;
-  --line:      #e7e7e4;
-  --line-soft: #f0f0ed;
-  --accent:    #4f46e5;   /* indigo */
-  --accent-soft:#eef0ff;
-  --warn:      #b45309;   /* amber */
-  --warn-soft: #fdf3e7;
-  --ok:        #15803d;   /* green */
-  --ok-soft:   #edf7f0;
-  --code-bg:   #1d1d1f;   /* code-slab bg; darkened in dark theme to stay distinct from --panel */
+  --bg:        #f2f1ec;   /* stone ground */
+  --panel:     #fbfaf8;
+  --ink:       #23262b;
+  --ink-soft:  #565b60;
+  --ink-faint: #8d9196;
+  --line:      #e2e0d8;
+  --line-soft: #eceae3;
+  --accent:    #136a5e;   /* verdigris — oxidized-copper glass */
+  --accent-soft:#e3efeb;
+  --gilt:      #a57e2f;   /* gold leaf — one tessera only */
+  --warn:      #9a5b16;
+  --warn-soft: #f6ebda;
+  --ok:        #2f7d4f;
+  --ok-soft:   #e6f2e9;
+  --code-bg:   #20262a;   /* code-slab bg; darkened in dark theme to stay distinct from --panel */
   color-scheme: light;
   --sidebar-w: 280px;
   --max-read:  760px;
@@ -22,22 +27,23 @@
   --radius:    10px;
   --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
-  --display: "Syne", var(--sans);
+  --display: "Marcellus", Georgia, serif;
 }
 
-  /* Dark theme — same variables, dark values. Toggled by data-theme on <html>. */
+  /* Dark theme — the night wall: same materials, lamplit. Toggled by data-theme on <html>. */
   :root[data-theme="dark"] {
-    --bg: #15161a;  --panel: #1d1f24;
-    --ink: #e9e9ec; --ink-soft: #b4b6bd; --ink-faint: #7e8088;
-    --line: #2d2f37; --line-soft: #24262c;
-    --accent: #818cf8; --accent-soft: #262a45;
-    --warn: #fbbf24; --warn-soft: #2c2616;
-    --ok: #4ade80;   --ok-soft: #16271d;
-    --code-bg: #0f1014;   /* darker than --panel so code slabs stay distinct */
+    --bg: #16191b;  --panel: #1e2226;
+    --ink: #e8e7e2; --ink-soft: #afb2ae; --ink-faint: #7c807d;
+    --line: #2e3336; --line-soft: #262b2e;
+    --accent: #4fb3a4; --accent-soft: #1c2e2b;
+    --gilt: #c7a257;
+    --warn: #dca453; --warn-soft: #2e2517;
+    --ok: #6fbe8d;   --ok-soft: #1a2b20;
+    --code-bg: #101416;   /* darker than --panel so code slabs stay distinct */
     color-scheme: dark;
   }
   /* the command bar bg is hardcoded light (for its blur) — it needs a dark value too */
-  :root[data-theme="dark"] .cmdbar { background: rgba(21, 22, 26, .82); }
+  :root[data-theme="dark"] .cmdbar { background: rgba(22, 25, 27, .82); }
   html { transition: background-color .2s ease, color .2s ease; } 
 
   /* far right of the command bar (the flex-grow prompt pushes it there) */
@@ -69,7 +75,7 @@ html, body {
   position: relative; transition: margin-left .18s ease;
 }
 .brand { margin-bottom: 26px; }
-.brand-title { font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; }
+.brand-title { font-family: var(--display); font-weight: 400; font-size: 23px; letter-spacing: .02em; }
 .brand-sub  { color: var(--ink-faint); font-size: 12.5px; margin-top: 3px; }
 
 .nav-group-label {
@@ -94,7 +100,7 @@ html, body {
   position: sticky; top: 0; z-index: 20;
   display: flex; align-items: center; gap: 10px 12px; flex-wrap: wrap;
   padding: 11px 24px;
-  background: rgba(251, 251, 250, .82);
+  background: rgba(242, 241, 236, .82);
   backdrop-filter: saturate(1.4) blur(8px);
   border-bottom: 1px solid var(--line);
 }
@@ -111,6 +117,7 @@ html, body {
 .cmd-mark { display: block; flex: 0 0 auto; transform-origin: 50% 50%; }
 .cmd-mark rect { fill: var(--accent); }
 .cmd-mark rect:nth-child(2), .cmd-mark rect:nth-child(3) { opacity: .42; }
+.cmd-mark rect:nth-child(4) { fill: var(--gilt); }   /* the one gilded tessera */
 
 /* the prompt — the main driver. Type a task; signed in, a model emits an overlay. */
 .cmd-prompt-wrap { position: relative; flex: 1 1 240px; min-width: 150px; display: flex; align-items: center; }
@@ -177,7 +184,7 @@ html, body {
 
 /* ── View heading ────────────────────────────────────────── */
 .view-head { margin-bottom: 24px; }
-.doc-title { font-family: var(--display); font-weight: 700; font-size: 30px; letter-spacing: -0.02em; margin: 0 0 6px; }
+.doc-title { font-family: var(--display); font-weight: 400; font-size: 32px; letter-spacing: .015em; margin: 0 0 6px; }
 .doc-sub   { color: var(--ink-faint); margin: 0; }
 
 /* ── Tessera grid + layouts ──────────────────────────────── */
@@ -200,7 +207,7 @@ html, body {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 10px 16px; border-bottom: 1px solid var(--line-soft);
 }
-.tessera-title { font-family: var(--display); font-weight: 600; font-size: 13.5px; letter-spacing: -0.01em; }
+.tessera-title { font-family: var(--sans); font-weight: 500; font-size: 13.5px; letter-spacing: 0; }
 .tessera-tag {
   font-family: var(--mono); font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
   color: var(--ink-faint); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px;
@@ -213,7 +220,7 @@ html, body {
 
 /* ── Markdown / doc surface ──────────────────────────────── */
 #view h1, #view h2, #view h3, .md-h {
-  font-family: var(--display); font-weight: 600; letter-spacing: -0.01em;
+  font-family: var(--display); font-weight: 400; letter-spacing: .01em;
   line-height: 1.3; margin: 26px 0 10px;
 }
 .md-h1 { font-size: 22px; } .md-h2 { font-size: 20px; } .md-h3 { font-size: 16px; } .md-h4 { font-size: 14px; color: var(--ink-soft); }
@@ -336,7 +343,7 @@ pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
 }
 .composer-drawer.open .composer-panel { transform: none; }
 .composer-panel-head { display: flex; align-items: center; justify-content: space-between; }
-.composer-panel-title { font-family: var(--display); font-weight: 600; font-size: 15px; }
+.composer-panel-title { font-family: var(--sans); font-weight: 500; font-size: 15px; }
 .composer-panel-hint { color: var(--ink-faint); font-size: 12.5px; margin: 0; }
 .composer-close {
   width: 28px; height: 28px; flex: 0 0 auto; line-height: 1; font-size: 14px;
@@ -425,7 +432,15 @@ pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
 .srail-title { font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .srail-meta { display:flex; align-items:center; gap:8px; }
 .srail-kind { font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); flex:0 0 auto; }
-.srail-bar { flex:1; height:3px; border-radius:2px; background:var(--line); overflow:hidden; }
-.srail-bar > i { display:block; height:100%; background:var(--accent); opacity:.65; }
+/* strength as laid tesserae — small squares fill by score, not a continuous bar */
+.srail-bar { flex:1; height:5px; background:transparent; overflow:hidden; }
+.srail-bar > i { display:block; height:100%; opacity:.85;
+  background:repeating-linear-gradient(90deg, var(--accent) 0 5px, transparent 5px 8px); }
 .srail-more { display:block; width:100%; text-align:left; background:transparent; border:0; color:var(--ink-faint); font-size:11.5px; padding:6px 9px; cursor:pointer; font-family:inherit; }
 .srail-more:hover { color:var(--accent); }
+
+/* ── tile collapse — fold to the title bar; persists via reshape deltas ── */
+.t-fold { border:0; background:transparent; color:var(--ink-faint); font-size:11px; line-height:1; padding:2px 4px; cursor:pointer; border-radius:4px; flex:0 0 auto; }
+.t-fold:hover { color:var(--accent); background:var(--line-soft); }
+.tessera.collapsed .tessera-body, .tessera.collapsed .okf-meta, .tessera.collapsed .tessera-sub, .tessera.collapsed .tessera-resize { display:none; }
+.tessera.collapsed .tessera-head { border-bottom:0; }
