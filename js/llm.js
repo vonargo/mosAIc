@@ -142,3 +142,22 @@ When you do have enough — a self-contained task, or content included inline �
 
   throw new Error('The model didn’t return a valid layout — try rephrasing, or open the Composer to lay it out by hand.');
 }
+
+// Rerank the subject rail: score each candidate 0..1 for relatedness to the subject.
+// Same account/provider path as generateOverlay — one small call, billed to the viewer.
+// The CALLER treats the result as RE-SCORES only (subject-rail.js applyRerank drops
+// unknown refs) — a model can never mint, remove, or retitle a rail row.
+export async function scoreRelated(subject, candidates) {
+  if (!isSignedIn()) throw new Error('Sign in with Hugging Face to use AI rerank.');
+  const { InferenceClient } = await infer();
+  const client = new InferenceClient(auth.accessToken);
+  const list = (candidates || []).map(c => ({ ref: c.ref, kind: c.kind, title: c.title, snippet: String(c.hay || '').slice(0, 200) }));
+  const messages = [
+    { role: 'system', content: 'You rank relatedness. Given a subject and a candidate list, reply with ONLY JSON: {"scores":[{"ref":"...","score":0.0}]} — one entry per candidate, score in [0,1], higher = more related to the subject. No prose, no fences.' },
+    { role: 'user', content: `Subject: ${subject}\n\nCandidates:\n${JSON.stringify(list)}` },
+  ];
+  const content = await chat(client, messages, { type: 'json_object' });
+  const parsed = extractJson(content);
+  if (!parsed || !Array.isArray(parsed.scores)) throw new Error('The model didn’t return usable scores — kept the overlap ranking.');
+  return parsed.scores;
+}

@@ -7,7 +7,8 @@
 import { STATE } from './state.js';
 import { surface, viewById } from './surface.js';
 import { navigate } from './router.js';
-import { rankBySubject, railHtml } from './subject-rail.js';
+import { rankBySubject, railHtml, candidateIndex, applyRerank } from './subject-rail.js';
+import { isSignedIn, scoreRelated } from './llm.js';
 
 let expanded = false;
 let data = { scorer: 'overlap', ranked: [] };
@@ -25,7 +26,7 @@ function scrollToTile(idx) {
 function render() {
   const el = mountEl();
   if (!el) return;
-  const html = railHtml(data, { expanded, canRerank: false });
+  const html = railHtml(data, { expanded, canRerank: isSignedIn() && data.scorer !== 'ai' });
   el.innerHTML = html;
   el.hidden = !html;
 }
@@ -49,6 +50,22 @@ export function initSubjectRail() {
         navigate(viewId);
         scrollToTile(parseInt(idx, 10) || 0);
       } else navigate(ref);
+      return;
+    }
+    const rr = e.target.closest('.srail-rerank');
+    if (rr) {
+      // ✦ rerank — explicit consent per call (never auto-spends tokens on navigation). One
+      // small call re-SCORES the same rows; applyRerank enforces the rescore-only invariant.
+      const active = viewById(STATE.route);
+      if (!active) return;
+      rr.disabled = true; rr.textContent = '…';
+      const cands = candidateIndex(surface().views, active.id);
+      scoreRelated([active.title, active.heading].filter(Boolean).join(' — '), cands)
+        .then(scores => { data = { scorer: 'ai', ranked: applyRerank(data.ranked, scores) }; render(); })
+        .catch(err => {
+          document.dispatchEvent(new CustomEvent('mosaic:toast', { detail: err?.message || 'Rerank failed — kept the overlap ranking.' }));
+          render();   // restores the button
+        });
       return;
     }
     if (e.target.closest('.srail-more')) { expanded = !expanded; render(); }
