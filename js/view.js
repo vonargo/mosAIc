@@ -5,6 +5,7 @@ import { escapeHtml } from './utils.js';
 import { renderTessera, hydrate } from './tesserae.js';
 import { renderMermaid } from './diagram.js';
 import { enableResize } from './resize.js';
+import { enableDrag } from './drag.js';
 
 const LAYOUTS = new Set(['stack', 'grid', 'split']);
 
@@ -21,6 +22,7 @@ export function renderView(view, mount) {
     `</div>`;
 
   hydrate(mount);
+  enableDrag(mount, view);     // drag a tile to rearrange → a trusted overlay patch
   enableResize(mount, view);   // drag a tile's corner to change its span (persists via reshape deltas)
   renderMermaid(mount);   // async; fills in when (and if) the lib loads
 }
