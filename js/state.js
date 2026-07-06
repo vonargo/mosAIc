@@ -13,6 +13,23 @@ export const STATE = {
   task: null,     // active demo task id (for command-bar highlight); null = base
 };
 
+// ── Reshape persistence ─────────────────────────────────────────────────────
+// A resize is *reshape intent*, decoupled from the view DATA (which an overlay can
+// regenerate). Persist a per-view+tile delta in localStorage and re-apply it in
+// effective(), so a resize survives a re-render and a reload. Keyed viewId → tile index.
+const RESHAPE_KEY = 'mosaic-reshapes';
+let RESHAPE = (() => { try { return JSON.parse(localStorage.getItem(RESHAPE_KEY) || '{}') || {}; } catch { return {}; } })();
+function saveReshapes() { try { localStorage.setItem(RESHAPE_KEY, JSON.stringify(RESHAPE)); } catch { /* storage off — keep in memory */ } }
+
+export function recordReshape(viewId, idx, patch) {
+  if (!viewId || !Number.isInteger(idx) || !patch) return;
+  RESHAPE[viewId] = RESHAPE[viewId] || {};
+  RESHAPE[viewId][idx] = { ...RESHAPE[viewId][idx], ...patch };
+  saveReshapes();
+}
+export const reshapesFor = (viewId) => RESHAPE[viewId] || {};
+export function clearReshapes() { RESHAPE = {}; saveReshapes(); }   // tests / deliberate reset
+
 // base ⊕ overlay → effective surface.
 //
 // Each overlay view is Object.assign'd over the base view with the same id
@@ -33,10 +50,14 @@ export function effective(base) {
   }
 
   const remove = new Set(ov.remove || []);
-  return {
-    title: ov.title || base.title || 'MosAIc',
-    views: remove.size ? views.filter(v => !remove.has(v.id)) : views,
-  };
+  const out = remove.size ? views.filter(v => !remove.has(v.id)) : views;
+  // re-apply persisted reshape deltas per view+tile — new tile objects, so base/overlay
+  // tiles are never mutated (effective stays pure).
+  for (const v of out) {
+    const r = RESHAPE[v.id];
+    if (r && Array.isArray(v.tesserae)) v.tesserae = v.tesserae.map((t, i) => (r[i] ? { ...t, ...r[i] } : t));
+  }
+  return { title: ov.title || base.title || 'MosAIc', views: out };
 }
 
 // Fold a new overlay (a patch the model emits against the *current* surface) into
