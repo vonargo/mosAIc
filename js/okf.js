@@ -171,9 +171,13 @@ export function okfToOverlay(docs) {
       title: type,
       heading: type,
       subtitle: `${group.length} ${group.length === 1 ? 'concept' : 'concepts'}`,
-      layout: 'stack',
+      // grid + full-row tiles: reads exactly like the old one-column stack, but the corner
+      // resize works — drag a concept down to span 1 and two concepts sit side by side.
+      // (stack hides the resize handle: span is a no-op in a flex column.)
+      layout: 'grid',
       tesserae: group.map((d) => ({
         type: 'markdown',
+        span: 2,
         title: d.title,
         body: rewriteCrossLinks(d.body, d.path, pathToView),
         okf: {

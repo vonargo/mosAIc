@@ -30,8 +30,11 @@ export function renderView(view, mount) {
       `</nav>`
     : '';
 
+  // Concept views (any tile carrying okf) keep a reading measure even in grid layout —
+  // full-app-wide text columns aren't a calm reading surface.
+  const okfView = specs.some(t => t && t.okf) ? ' view-okf' : '';
   mount.innerHTML =
-    `<div class="view-inner layout-${layout}">` +
+    `<div class="view-inner layout-${layout}${okfView}">` +
       toc +
       `<header class="view-head"><h1 class="doc-title">${escapeHtml(heading)}</h1>${sub}</header>` +
       `<div class="tessera-grid">${tiles}</div>` +

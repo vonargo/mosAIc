@@ -444,3 +444,6 @@ pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
 .t-fold:hover { color:var(--accent); background:var(--line-soft); }
 .tessera.collapsed .tessera-body, .tessera.collapsed .okf-meta, .tessera.collapsed .tessera-sub, .tessera.collapsed .tessera-resize { display:none; }
 .tessera.collapsed .tessera-head { border-bottom:0; }
+
+/* ── OKF concept views — grid (so resize works) but with a reading measure ── */
+.view-inner.layout-grid.view-okf { max-width: 980px; margin: 0 auto; }

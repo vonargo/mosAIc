@@ -152,6 +152,15 @@ test('okfToOverlay: one view per type, one markdown tessera per doc', () => {
   assert.equal(table.tesserae[0].title, 'Customer Orders');
 });
 
+test('okfToOverlay: concept views are grid with full-row tiles — reads like a column, but resizable', () => {
+  const { docs } = parseOkfBundle(BUNDLE);
+  const overlay = okfToOverlay(docs);
+  for (const v of overlay.views) {
+    assert.equal(v.layout, 'grid');                       // stack hides the resize handle
+    for (const t of v.tesserae) assert.equal(t.span, 2);  // full row by default → same reading feel
+  }
+});
+
 test('okfToOverlay: carries OKF metadata + the sourced/unsourced provenance signal', () => {
   const { docs } = parseOkfBundle(BUNDLE);
   const overlay = okfToOverlay(docs);
