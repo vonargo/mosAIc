@@ -3,7 +3,7 @@
 // module falls back to in-memory (the try/catch), which is exactly what these lock.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { STATE, effective, recordReshape, reshapesFor, clearReshapes } from '../js/state.js';
+import { STATE, effective, recordReshape, recordViewReshape, reshapesFor, clearReshapes } from '../js/state.js';
 import { validateOverlay } from '../js/overlay.js';
 import { renderTessera } from '../js/tesserae.js';
 
@@ -40,4 +40,17 @@ test('effective() re-applies reshape deltas without mutating base', () => {
   assert.equal(BASE.views[0].tesserae[0].span, undefined);  // base untouched (pure)
   clearReshapes();
   assert.equal(effective(BASE).views[0].tesserae[0].span, undefined);  // cleared → gone
+});
+
+test('view-level reshape: recordViewReshape({layout}) overrides the model layout in effective(), non-colliding with tile deltas', () => {
+  clearReshapes();
+  STATE.overlay = {};
+  recordViewReshape('v1', { layout: 'grid' });
+  recordReshape('v1', 0, { span: 2 });                     // tile delta coexists
+  const out = effective(BASE);
+  assert.equal(out.views[0].layout, 'grid');               // the human's layout wins
+  assert.equal(out.views[0].tesserae[0].span, 2);          // tile delta still applies
+  assert.equal(BASE.views[0].layout, undefined);           // base untouched
+  clearReshapes();
+  assert.equal(effective(BASE).views[0].layout, undefined);
 });

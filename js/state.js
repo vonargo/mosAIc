@@ -30,6 +30,15 @@ export function recordReshape(viewId, idx, patch) {
 export const reshapesFor = (viewId) => RESHAPE[viewId] || {};
 export function clearReshapes() { RESHAPE = {}; saveReshapes(); }   // tests / deliberate reset
 
+// A VIEW-level reshape (e.g. {layout}) — the human's override of the model's choice, stored
+// under the non-numeric key '_view' so it can't collide with tile indices.
+export function recordViewReshape(viewId, patch) {
+  if (!viewId || !patch) return;
+  RESHAPE[viewId] = RESHAPE[viewId] || {};
+  RESHAPE[viewId]._view = { ...RESHAPE[viewId]._view, ...patch };
+  saveReshapes();
+}
+
 // base ⊕ overlay → effective surface.
 //
 // Each overlay view is Object.assign'd over the base view with the same id
@@ -51,11 +60,13 @@ export function effective(base) {
 
   const remove = new Set(ov.remove || []);
   const out = remove.size ? views.filter(v => !remove.has(v.id)) : views;
-  // re-apply persisted reshape deltas per view+tile — new tile objects, so base/overlay
-  // tiles are never mutated (effective stays pure).
-  for (const v of out) {
-    const r = RESHAPE[v.id];
-    if (r && Array.isArray(v.tesserae)) v.tesserae = v.tesserae.map((t, i) => (r[i] ? { ...t, ...r[i] } : t));
+  // re-apply persisted reshape deltas — view-level ('_view', e.g. the layout override) first,
+  // then per-tile. New objects throughout, so base/overlay are never mutated (effective stays pure).
+  for (let i = 0; i < out.length; i++) {
+    const r = RESHAPE[out[i].id];
+    if (!r) continue;
+    if (r._view) out[i] = { ...out[i], ...r._view };
+    if (Array.isArray(out[i].tesserae)) out[i].tesserae = out[i].tesserae.map((t, j) => (r[j] ? { ...t, ...r[j] } : t));
   }
   return { title: ov.title || base.title || 'MosAIc', views: out };
 }

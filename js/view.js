@@ -6,9 +6,12 @@ import { renderTessera, hydrate } from './tesserae.js';
 import { renderMermaid } from './diagram.js';
 import { enableResize } from './resize.js';
 import { enableDrag } from './drag.js';
-import { recordReshape } from './state.js';
+import { recordReshape, recordViewReshape } from './state.js';
 
 const LAYOUTS = new Set(['stack', 'grid', 'split']);
+// the layout chip: the model proposes a layout, the human owns it — click cycles, persists.
+const MODES = ['stack', 'grid', 'split'];
+const MODE_ICON = { stack: '☰', grid: '⊞', split: '◫' };
 
 export function renderView(view, mount) {
   const layout = LAYOUTS.has(view.layout) ? view.layout : 'stack';
@@ -36,9 +39,17 @@ export function renderView(view, mount) {
   mount.innerHTML =
     `<div class="view-inner layout-${layout}${okfView}">` +
       toc +
-      `<header class="view-head"><h1 class="doc-title">${escapeHtml(heading)}</h1>${sub}</header>` +
+      `<header class="view-head"><h1 class="doc-title">${escapeHtml(heading)}</h1>${sub}` +
+        `<button class="layout-toggle" type="button" title="Switch layout (stack reads, grid/split resize) — persists">${MODE_ICON[layout]} ${layout}</button>` +
+      `</header>` +
       `<div class="tessera-grid">${tiles}</div>` +
     `</div>`;
+
+  mount.querySelector('.layout-toggle')?.addEventListener('click', () => {
+    const next = MODES[(MODES.indexOf(layout) + 1) % MODES.length];
+    recordViewReshape(view.id, { layout: next });    // the override outlives reloads + re-renders
+    renderView({ ...view, layout: next }, mount);    // repaint this mount now
+  });
 
   mount.querySelectorAll('.toc-item').forEach(btn => btn.addEventListener('click', () => {
     const tile = mount.querySelectorAll('.tessera')[parseInt(btn.dataset.ti, 10)];
