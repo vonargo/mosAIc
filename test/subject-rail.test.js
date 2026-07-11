@@ -39,14 +39,48 @@ test('candidateIndex: other views + okf concept tiles (ref viewId::i); active ex
   assert.ok(!refs.includes('tokens::0'));                             // plain tile ≠ candidate
 });
 
-test('rankBySubject: related ranks above unrelated; zero-score dropped; sorted desc', () => {
+test('rankBySubject v2: related ranks above unrelated; zero-score dropped; sorted desc; field weight shows', () => {
   const { scorer, ranked } = rankBySubject(VIEWS[0], VIEWS);
-  assert.equal(scorer, 'overlap');
+  assert.equal(scorer, 'lexical v2');
   const refs = ranked.map(r => r.ref);
   assert.ok(refs.indexOf('tokens') >= 0, 'token-overlapping view ranks');
   assert.ok(refs.indexOf('kb::0') >= 0, 'oauth concept ranks');
+  assert.equal(refs[0], 'kb::0', 'title+tag match outranks a body-ish match (field weighting)');
   assert.ok(!refs.includes('recipes'), 'pasta does not rank for OAuth');   // zero-score dropped
   for (let i = 1; i < ranked.length; i++) assert.ok(ranked[i - 1].score >= ranked[i].score);
+});
+
+// ── scorer v2 specifics (field weights · IDF · the Unicode tokenizer) ──
+test('tokenizer v2: 2-letter acronyms live, Cyrillic tokenizes, compound tech tokens survive whole', () => {
+  const t = tokens('The AI UI runs on node.js with OAuth2 — Настройка памяти');
+  assert.ok(t.has('ai') && t.has('ui'), 'acronyms no longer invisible');
+  assert.ok(t.has('node.js'), 'compound tech token kept whole');
+  assert.ok(t.has('oauth2'), 'alnum tech token kept');
+  assert.ok(t.has('настройка') && t.has('памяти'), 'Cyrillic tokenizes instead of vanishing');
+  assert.ok(!t.has('the') && !t.has('on'), 'stopwords (incl. 2-letter) still dropped');
+});
+
+test('field weighting: a TITLE match outranks the same term buried in a BODY', () => {
+  const active = { id: 'a', title: 'Provenance', tesserae: [] };
+  const views = [active,
+    { id: 'in-title', title: 'Provenance ledger', tesserae: [] },
+    { id: 'in-body', title: 'Notes', subtitle: 'provenance provenance provenance', tesserae: [] },
+  ];
+  const { ranked } = rankBySubject(active, views);
+  assert.equal(ranked[0].ref, 'in-title');
+});
+
+test('IDF: a rare shared term outranks a term every candidate carries', () => {
+  const active = { id: 'a', title: 'verdigris surface', tesserae: [] };
+  const views = [active,
+    { id: 'rare', title: 'verdigris surface', tesserae: [] },        // shares rare + common
+    { id: 'common1', title: 'surface one', tesserae: [] },           // 'surface' is everywhere
+    { id: 'common2', title: 'surface two', tesserae: [] },
+    { id: 'common3', title: 'surface three', tesserae: [] },
+  ];
+  const { ranked } = rankBySubject(active, views);
+  assert.equal(ranked[0].ref, 'rare');
+  assert.ok(ranked[0].score > ranked[1].score * 1.5, 'the rare-term match wins decisively, not marginally');
 });
 
 test('applyRerank: rescore-only — unknown refs ignored, no rows added/removed, clamped, resorted', () => {
