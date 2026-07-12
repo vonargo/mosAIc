@@ -411,9 +411,21 @@ pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
 .tessera.resizing { outline:1.5px dashed var(--accent); outline-offset:2px; }
 .layout-stack .tessera-resize { display:none; }   /* span is a no-op in one column */
 
-/* ── tile drag-reorder ── */
+/* ── tile drag-reorder — while dragging, every tile shows a faint SLOT outline ("where
+   things could go"); the hovered target gets an accent INSERTION EDGE telling the truth
+   about the landing side (left/above = before it, right/below = after it). ── */
 .tessera.dragging { opacity:.45; }
-.tessera.drop-target { outline:1.5px dashed var(--accent); outline-offset:2px; }
+.tessera-grid.drag-active .tessera:not(.dragging) { outline:1.5px dashed var(--line); outline-offset:3px; }
+.tessera.drop-target { outline:1.5px dashed var(--accent) !important; outline-offset:3px; position:relative; }
+.tessera.drop-target::after { content:''; position:absolute; background:var(--accent); border-radius:2px; z-index:3; }
+/* the edge sits INSIDE the tile (tiles clip overflow) — grid/split flow left→right: vertical edge */
+.layout-grid .tessera.drop-target.drop-before::after,
+.layout-split .tessera.drop-target.drop-before::after { left:0; top:0; bottom:0; width:4px; }
+.layout-grid .tessera.drop-target.drop-after::after,
+.layout-split .tessera.drop-target.drop-after::after { right:0; top:0; bottom:0; width:4px; }
+/* stack flows top→bottom: horizontal edge */
+.layout-stack .tessera.drop-target.drop-before::after { top:0; left:0; right:0; height:4px; }
+.layout-stack .tessera.drop-target.drop-after::after { bottom:0; left:0; right:0; height:4px; }
 
 /* ── sticky TOC — pinned tile-title strip on panels with ≥4 tiles ── */
 .view-toc { position:sticky; top:0; z-index:5; display:flex; flex-wrap:wrap; gap:6px; padding:10px 0; margin-bottom:10px; background:var(--bg); border-bottom:1px solid var(--line); }
