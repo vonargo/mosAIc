@@ -15,6 +15,7 @@ import { TASKS, taskById } from './demo.js';
 import { retheme } from './diagram.js';
 import { openComposer } from './composer.js';
 import { openOkfBundle, openOkfSample, okfSearch } from './okf-load.js';
+import { openSnapshots } from './snapshots.js';
 import { validateOverlay, composePatch } from './overlay.js';
 import { initAuth, signIn, signOut, isSignedIn, userName, oauthAvailable, onAuthChange, generateOverlay } from './llm.js';
 import { initSubjectRail } from './subject-rail-boot.js';
@@ -205,6 +206,7 @@ function boot() {
   document.addEventListener('mosaic:reset', resetOverlay);
   document.getElementById('composer-open')?.addEventListener('click', openComposer);
   document.getElementById('okf-open')?.addEventListener('click', openOkfBundle);
+  document.getElementById('snap-open')?.addEventListener('click', openSnapshots);
   const okfSearchEl = document.getElementById('okf-search');
   let okfSearchT;
   okfSearchEl?.addEventListener('input', () => {

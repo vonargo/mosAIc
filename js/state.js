@@ -29,6 +29,10 @@ export function recordReshape(viewId, idx, patch) {
 }
 export const reshapesFor = (viewId) => RESHAPE[viewId] || {};
 export function clearReshapes() { RESHAPE = {}; saveReshapes(); }   // tests / deliberate reset
+// A snapshot captures the whole reshape map (all views' size/collapse/layout/order deltas) alongside
+// the overlay; restoring one swaps it back in. Deep-cloned so a snapshot can't alias the live map.
+export function exportReshapes() { try { return JSON.parse(JSON.stringify(RESHAPE)); } catch { return {}; } }
+export function importReshapes(map) { RESHAPE = (map && typeof map === 'object') ? map : {}; saveReshapes(); }
 
 // A VIEW-level reshape (e.g. {layout}) — the human's override of the model's choice, stored
 // under the non-numeric key '_view' so it can't collide with tile indices.

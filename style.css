@@ -375,6 +375,46 @@ pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
 .composer-msg.err { color: #c0392b; font-family: var(--mono); font-size: 12px; }
 .composer-panel .composer-input { flex: 1; min-height: 0; }   /* fill the drawer height */
 
+/* ── ◆ Set — snapshots drawer ────────────────────────────── */
+.snap-drawer .composer-panel { display: flex; flex-direction: column; }
+.snap-saverow { display: flex; gap: 8px; margin: 4px 0 2px; }
+.snap-input {
+  flex: 1; font: inherit; font-size: 13px; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 11px;
+}
+.snap-input:focus { outline: none; border-color: var(--accent); background: var(--panel); }
+.snap-save {
+  font: inherit; font-size: 13px; font-weight: 500; padding: 7px 15px; white-space: nowrap;
+  background: var(--accent); color: #fff; border: 0; border-radius: 8px; cursor: pointer;
+}
+.snap-save:hover { filter: brightness(1.08); }
+.snap-listwrap { flex: 1; overflow-y: auto; margin: 6px 0; min-height: 60px; }
+.snap-empty { color: var(--ink-faint); font-size: 13px; margin: 12px 2px; }
+.snap-list { list-style: none; margin: 0; padding: 0; }
+.snap-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 4px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.snap-name { font-weight: 500; font-size: 13.5px; flex: 0 1 auto; }
+.snap-when { color: var(--ink-faint); font-size: 11.5px; margin-left: auto; }
+.snap-acts { display: flex; gap: 6px; }
+.snap-restore {
+  font: inherit; font-size: 12px; padding: 4px 11px; cursor: pointer;
+  background: none; color: var(--accent); border: 1px solid var(--accent-soft); border-radius: 999px;
+}
+.snap-restore:hover { border-color: var(--accent); background: var(--accent-soft); }
+.snap-del {
+  font: inherit; font-size: 12px; width: 24px; height: 24px; cursor: pointer;
+  background: none; color: var(--ink-faint); border: 1px solid var(--line); border-radius: 999px;
+}
+.snap-del:hover { color: #c0392b; border-color: #c0392b; }
+.snap-io { border-top: 1px solid var(--line-soft); padding-top: 12px; }
+.snap-export, .snap-import {
+  font: inherit; font-size: 12.5px; padding: 6px 12px; cursor: pointer;
+  background: none; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 8px;
+}
+.snap-export:hover, .snap-import:hover { border-color: var(--ink-faint); color: var(--ink); }
+
 /* ── Reshape signals ─────────────────────────────────────── */
 #app.reshaping .cmd-mark { animation: markSpin .6s cubic-bezier(.3, .8, .3, 1); }
 @keyframes markSpin { from { transform: rotate(0); } to { transform: rotate(90deg); } }
