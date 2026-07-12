@@ -62,6 +62,37 @@ export function reorderReshape(viewId, from, to) {
   saveReshapes();
 }
 
+// Inserting a tile at index `at` shifts every delta at or after it up by one (same index-keying
+// reason as reorderReshape). '_view' is view-level and does not move. No-op on a bad index.
+export function insertReshape(viewId, at) {
+  const r = viewId && RESHAPE[viewId];
+  if (!r || !Number.isInteger(at)) return;
+  const next = {};
+  for (const k of Object.keys(r)) {
+    if (k === '_view') { next._view = r._view; continue; }
+    const i = Number(k);
+    next[Number.isInteger(i) && i >= at ? i + 1 : k] = r[k];
+  }
+  RESHAPE[viewId] = next;
+  saveReshapes();
+}
+
+// Removing the tile at index `at` drops its delta and pulls every later delta down by one.
+export function removeReshape(viewId, at) {
+  const r = viewId && RESHAPE[viewId];
+  if (!r || !Number.isInteger(at)) return;
+  const next = {};
+  for (const k of Object.keys(r)) {
+    if (k === '_view') { next._view = r._view; continue; }
+    const i = Number(k);
+    if (!Number.isInteger(i)) { next[k] = r[k]; continue; }
+    if (i === at) continue;                 // the removed tile's delta goes with it
+    next[i > at ? i - 1 : i] = r[k];
+  }
+  RESHAPE[viewId] = next;
+  saveReshapes();
+}
+
 // base ⊕ overlay → effective surface.
 //
 // Each overlay view is Object.assign'd over the base view with the same id

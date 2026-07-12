@@ -86,6 +86,15 @@ function okfMeta(okf) {
 }
 
 export function renderTessera(t, i = 0) {
+  // A spacer is a deliberate empty cell — a gap you can place, drag, resize, and delete. No head,
+  // no fold, no content; just enough of a frame to see the hole and a × to remove it.
+  if (t && t.type === 'spacer') {
+    const sp = resolveSpan(t);
+    return `<section class="tessera t-spacer" style="--span:${sp};--i:${i}" aria-label="Blank tile">` +
+      `<span class="spacer-mark">blank</span>` +
+      `<button class="t-del" type="button" title="Remove blank">×</button>` +
+      `<span class="tessera-resize" aria-hidden="true"></span></section>`;
+  }
   const type = t && RENDERERS[t.type] ? t.type : 'markdown';
   const fn = RENDERERS[type];
   const span = resolveSpan(t);

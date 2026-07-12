@@ -466,3 +466,20 @@ pre code { background: none; color: inherit; padding: 0; font-size: 13px; }
   border:1px solid var(--line); background:var(--panel); color:var(--ink-soft);
   border-radius:999px; padding:3px 10px; cursor:pointer; }
 .layout-toggle:hover { color:var(--accent); border-color:var(--accent); }
+/* ＋ blank chip — sits just left of the layout chip; inserts a spacer tile */
+.blank-add { position:absolute; right:96px; top:4px; font-family:var(--mono); font-size:11px;
+  border:1px dashed var(--line); background:var(--panel); color:var(--ink-faint);
+  border-radius:999px; padding:3px 10px; cursor:pointer; }
+.blank-add:hover { color:var(--accent); border-color:var(--accent); }
+
+/* ── spacer tile — a deliberate empty cell (a gap you place, drag, resize, remove) ── */
+.tessera.t-spacer { background:transparent; border:1.5px dashed var(--line);
+  min-height:96px; display:flex; align-items:center; justify-content:center; }
+.tessera.t-spacer .spacer-mark { font-family:var(--mono); font-size:11px; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--ink-faint); opacity:.5; }
+.tessera.t-spacer .t-del { position:absolute; top:6px; right:8px; width:20px; height:20px;
+  border:none; background:none; color:var(--ink-faint); font-size:15px; line-height:1;
+  cursor:pointer; opacity:0; transition:opacity .15s; }
+.tessera.t-spacer:hover { border-color:var(--ink-faint); }
+.tessera.t-spacer:hover .t-del { opacity:.7; }
+.tessera.t-spacer .t-del:hover { color:var(--accent); opacity:1; }

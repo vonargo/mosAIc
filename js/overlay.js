@@ -6,7 +6,9 @@
 import { composeOverlay } from './state.js';
 
 const LAYOUTS = new Set(['stack', 'grid', 'split']);
-const TYPES = new Set(['markdown', 'code', 'table', 'diagram', 'note', 'tasks']);
+// 'spacer' is an inert empty tile (a deliberate gap in the grid) — no body, url, or script, so it's
+// safe to allow through the shared, model-emittable gate (unlike an image tile).
+const TYPES = new Set(['markdown', 'code', 'table', 'diagram', 'note', 'tasks', 'spacer']);
 
 const slug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 

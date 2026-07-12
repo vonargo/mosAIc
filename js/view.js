@@ -6,7 +6,15 @@ import { renderTessera, hydrate } from './tesserae.js';
 import { renderMermaid } from './diagram.js';
 import { enableResize } from './resize.js';
 import { enableDrag } from './drag.js';
-import { recordReshape, recordViewReshape } from './state.js';
+import { recordReshape, recordViewReshape, insertReshape, removeReshape } from './state.js';
+
+// A structural tile change (insert/delete) is a host gesture on the surface's own tiles → a TRUSTED
+// apply, so the boundary composes it in without stripping provenance the neighbouring tiles carry.
+function applyTesserae(view, tesserae, label) {
+  document.dispatchEvent(new CustomEvent('mosaic:apply', {
+    detail: { overlay: { views: [{ id: view.id, tesserae }] }, label, trusted: true },
+  }));
+}
 
 const LAYOUTS = new Set(['stack', 'grid', 'split']);
 // the layout chip: the model proposes a layout, the human owns it — click cycles, persists.
@@ -22,10 +30,12 @@ export function renderView(view, mount) {
 
   // Sticky TOC — panels with enough tiles get a pinned strip of tile titles at the top;
   // click → scroll to the tile. Untitled tiles label by TYPE. Short panels stay clean.
+  // Spacers are gaps, not content — they don't earn a TOC entry (but keep their real index for data-ti).
   const TOC_MIN = 4;
-  const toc = specs.length >= TOC_MIN
+  const toc = specs.filter(t => t && t.type !== 'spacer').length >= TOC_MIN
     ? `<nav class="view-toc" aria-label="Panel contents">` +
         specs.map((t, i) => {
+          if (t && t.type === 'spacer') return '';
           const label = (t && t.title && String(t.title).trim()) ? t.title
             : (t && t.type ? t.type.charAt(0).toUpperCase() + t.type.slice(1) : 'Tile');
           return `<button class="toc-item" type="button" data-ti="${i}" title="${escapeHtml(String(label))}">${escapeHtml(String(label))}</button>`;
@@ -41,6 +51,7 @@ export function renderView(view, mount) {
       toc +
       `<header class="view-head"><h1 class="doc-title">${escapeHtml(heading)}</h1>${sub}` +
         `<button class="layout-toggle" type="button" title="Switch layout (stack reads, grid/split resize) — persists">${MODE_ICON[layout]} ${layout}</button>` +
+        `<button class="blank-add" type="button" title="Insert a blank tile — a gap you can drag into place, resize, or remove">＋ blank</button>` +
       `</header>` +
       `<div class="tessera-grid">${tiles}</div>` +
     `</div>`;
@@ -50,6 +61,22 @@ export function renderView(view, mount) {
     recordViewReshape(view.id, { layout: next });    // the override outlives reloads + re-renders
     renderView({ ...view, layout: next }, mount);    // repaint this mount now
   });
+
+  // ＋ blank — append a spacer, then drag it where you want the gap. Insert at the end so no
+  // existing reshape delta shifts (insertReshape is still correct for a mid-insert later).
+  mount.querySelector('.blank-add')?.addEventListener('click', () => {
+    const at = (view.tesserae || []).length;
+    insertReshape(view.id, at);
+    applyTesserae(view, [...(view.tesserae || []), { type: 'spacer', span: 1 }], 'blank added');
+  });
+
+  // × on a spacer — remove that tile and pull the reshape map down past it.
+  mount.querySelectorAll('.t-del').forEach(btn => btn.addEventListener('click', () => {
+    const idx = [...mount.querySelectorAll('.tessera-grid .tessera')].indexOf(btn.closest('.tessera'));
+    if (idx < 0) return;
+    removeReshape(view.id, idx);
+    applyTesserae(view, (view.tesserae || []).filter((_, j) => j !== idx), 'blank removed');
+  }));
 
   mount.querySelectorAll('.toc-item').forEach(btn => btn.addEventListener('click', () => {
     const tile = mount.querySelectorAll('.tessera')[parseInt(btn.dataset.ti, 10)];
