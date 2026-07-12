@@ -39,6 +39,29 @@ export function recordViewReshape(viewId, patch) {
   saveReshapes();
 }
 
+// Reshape deltas are keyed by tile INDEX, so a drag-reorder must splice the map the
+// same way it splices the tesserae — otherwise a tile's size/collapse stays at the old
+// slot and whatever lands there inherits it (looks like a "swap"). Mirror reorder(from→to)
+// on the numeric keys; '_view' is view-level and does not move. No-op on bad/equal indices.
+export function reorderReshape(viewId, from, to) {
+  const r = viewId && RESHAPE[viewId];
+  if (!r || from === to || !Number.isInteger(from) || !Number.isInteger(to)) return;
+  const at = (i) => {                          // old index → new index under reorder(from→to)
+    if (i === from) return to;
+    if (from < to && i > from && i <= to) return i - 1;
+    if (from > to && i >= to && i < from) return i + 1;
+    return i;
+  };
+  const next = {};
+  for (const k of Object.keys(r)) {
+    if (k === '_view') { next._view = r._view; continue; }
+    const i = Number(k);
+    next[Number.isInteger(i) ? at(i) : k] = r[k];
+  }
+  RESHAPE[viewId] = next;
+  saveReshapes();
+}
+
 // base ⊕ overlay → effective surface.
 //
 // Each overlay view is Object.assign'd over the base view with the same id

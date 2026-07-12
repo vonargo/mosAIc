@@ -3,6 +3,8 @@
 // arrangement validates, composes, and persists (sessionStorage). Native HTML5 DnD; the
 // reorder is pure + tested. Drag is suppressed from interactive controls.
 
+import { reorderReshape } from './state.js';
+
 export function reorder(list, from, to) {
   const a = Array.isArray(list) ? list.slice() : [];
   if (from < 0 || to < 0 || from >= a.length || to >= a.length || from === to) return a;
@@ -41,6 +43,7 @@ export function enableDrag(mount, view) {
       e.preventDefault(); clearMarks();
       if (from == null || from === i) return;
       const next = reorder(view.tesserae, from, i);
+      reorderReshape(view.id, from, i);   // splice the size/collapse map too, so a tile's shape travels with it
       // Host gesture on the surface's own tiles → TRUSTED dispatch: the boundary must not
       // strip provenance (okf) the tiles legitimately carry (a loaded bundle). The patch
       // touches only this view's tesserae; the boundary composes it over the overlay.

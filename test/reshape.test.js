@@ -3,7 +3,7 @@
 // module falls back to in-memory (the try/catch), which is exactly what these lock.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { STATE, effective, recordReshape, recordViewReshape, reshapesFor, clearReshapes } from '../js/state.js';
+import { STATE, effective, recordReshape, recordViewReshape, reorderReshape, reshapesFor, clearReshapes } from '../js/state.js';
 import { validateOverlay } from '../js/overlay.js';
 import { renderTessera } from '../js/tesserae.js';
 
@@ -40,6 +40,26 @@ test('effective() re-applies reshape deltas without mutating base', () => {
   assert.equal(BASE.views[0].tesserae[0].span, undefined);  // base untouched (pure)
   clearReshapes();
   assert.equal(effective(BASE).views[0].tesserae[0].span, undefined);  // cleared → gone
+});
+
+test('reorderReshape: a tile delta travels with its tile on a drag (from→to); _view stays put', () => {
+  clearReshapes();
+  recordReshape('v1', 0, { span: 2 });          // big tile at slot 0
+  recordReshape('v1', 2, { collapsed: true });  // collapsed tile at slot 2
+  recordViewReshape('v1', { layout: 'grid' });  // view-level override — must NOT move
+  reorderReshape('v1', 0, 2);                    // drag slot 0 → slot 2 : reorder = [1,2,0,3]
+  const r = reshapesFor('v1');
+  assert.deepEqual(r[2], { span: 2 }, 'old slot 0 delta now at slot 2 (followed the tile)');
+  assert.deepEqual(r[1], { collapsed: true }, 'old slot 2 delta shifted down to slot 1');
+  assert.equal(r[0], undefined, 'nothing stale left at the vacated slot');
+  assert.deepEqual(r._view, { layout: 'grid' }, 'view-level override untouched by the reindex');
+  reorderReshape('v1', 2, 0);                     // reverse drag restores the mapping
+  const back = reshapesFor('v1');
+  assert.deepEqual(back[0], { span: 2 });
+  assert.deepEqual(back[2], { collapsed: true });
+  reorderReshape('v1', 0, 0);                     // no-op / junk guarded
+  reorderReshape('', 0, 1);
+  clearReshapes();
 });
 
 test('view-level reshape: recordViewReshape({layout}) overrides the model layout in effective(), non-colliding with tile deltas', () => {
