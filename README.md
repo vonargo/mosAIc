@@ -24,6 +24,15 @@ hf_oauth_scopes:
 
 **A reconfigurable surface for directing an LLM — the panels reshape per task, instead of a linear chat transcript.**
 
+> **⚠️  Authenticity notice.** The only official home of MosAIc is
+> **https://github.com/vonargo/mosAIc**. MosAIc is distributed as **source
+> only — there are no official binary or installer downloads.** Lookalike
+> sites (including typosquatted domains that proxy this repo's pages, e.g.
+> "ithub"-style Fastly mirrors) have distributed **malware** under this
+> project's name via fake "release" downloads. If you see a "Loader",
+> installer, or password-protected archive claiming to be MosAIc, it is not
+> ours — do not run it. Get the code only by cloning this repository.
+
 Most LLM interfaces are a scroll: one conversation, no matter the work. MosAIc is a *surface* instead — a sidebar of views and a field of typed tiles. The model emits a small JSON **overlay** describing the shape it wants; MosAIc lays it out. Keep asking and the surface **evolves** — each task patches the current one instead of starting over. Same mechanism, any task.
 
 It's **bring-your-own-LLM**: sign in with Hugging Face, type a task, and it's sent to a model on [Inference Providers](https://huggingface.co/docs/inference-providers) billed to **your own account** — no shared key, and no *MosAIc* backend. MosAIc is the surface, not the model.
